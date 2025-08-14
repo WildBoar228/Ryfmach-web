@@ -1,0 +1,286 @@
+.header-block{
+    align-self: center;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 10vh 10vw 10vh 10vw;
+}
+
+.greeting{
+    text-align: center;
+    font: bold 24pt Arial, sans-serif;
+    color: black;
+}
+
+.description{
+    text-align: center;
+    font: normal 16pt Arial, sans-serif;
+    color: grey;
+}
+
+.info-text{
+    font: normal 16pt Arial, sans-serif;
+    margin: 0;
+}
+
+.small-info-text{
+    font: normal 14pt Arial, sans-serif;
+    margin: 0;
+}
+
+.center-block{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.letter-buttons-block{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+}
+
+.search-block{
+    display: flex;
+    justify-content: space-around;
+    width: 80vw;
+    height: fit-content;
+    margin: 10px;
+}
+
+.word-search{
+    width: 80vw;
+    height: 30pt;
+    border-radius: 15pt;
+    padding: 0px 10px 0px 10px;
+    margin: 0px 10px 0px 10px;
+    font: normal 16pt Arial, sans-serif;
+}
+
+.bright-button{
+    height: 30pt;
+    border-radius: 15pt;
+    padding: 0 10px 0 10px;
+    background-color: rgb(255, 224, 46);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dull-button{
+    height: 30pt;
+    border-radius: 15pt;
+    padding: 0 10px 0 10px;
+    background-color: gray;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.button-search{
+    width: fit-content;
+    font: normal 16pt Arial, sans-serif;
+    transition: 300ms cubic-bezier(0.075, 0.82, 0.165, 1) 0s;
+}
+
+.button-search:hover{
+    background-color: rgb(255, 240, 154);
+    border-color: gray;
+    transition: 300ms cubic-bezier(0.075, 0.82, 0.165, 1) 0s;
+}
+
+.rhymes-block{
+    width: 80%;
+    margin: auto;
+    margin-top: 30px;
+}
+
+.rhyme-word{
+    font: bold 14pt Arial, sans-serif;
+    color: black;
+}
+
+.accent-vowel{
+    color: firebrick;
+    font-weight: bold;
+}
+
+.errors-block{
+    width: 80%;
+    margin: auto;
+    margin-top: 30px;
+}
+
+.error-msg{
+    width: 70vw;
+    height: 24pt;
+    border-radius: 10px;
+    background-color: rgb(255, 171, 171);
+    padding: 5px 10px 0px 10px;
+}
+
+.error-text{
+    font: normal 14pt Arial, sans-serif;
+    color: firebrick;
+}
+
+.dropdown-light{
+    background-color: azure;
+    border: black 1px;
+}
+
+.invisible{
+    visibility: "collapse";
+}
+
+.button-scroll-up{
+    position: fixed;
+    right: 30px;
+    bottom: 30px;
+    font: normal 16pt Arial, sans-serif;
+}
+
+.button-spinner{
+    width: 14pt;
+    height: 14pt;
+}
+
+.square-letter-label{
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    text-align: center;
+    font: normal 16pt Arial, sans-serif;
+}
+
+.square-letter-button-outline{
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    border: 1px firebrick;
+    color: black;
+    text-align: center;
+    font: normal 16pt Arial, sans-serif;
+}
+
+.square-letter-button-chosen{
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    border: 1px black;
+    background-color: firebrick;
+    color: white;
+    text-align: center;
+    font: normal 16pt Arial, sans-serif;
+}
+
+.close-button{
+    width: 30px;
+    height: 30px;
+    border-radius: 10px;
+    border: 1px black;
+    background-color: firebrick;
+    color: white;
+    text-align: center;
+    font: normal 16pt Arial, sans-serif;
+}
+
+@media screen and (orientation: portrait){
+    .header-block{
+        padding: 5vh 5vw 5vh 5vw;
+    }
+
+    .greeting{
+        font: bold 10vw Arial, sans-serif;
+    }
+
+    .description{
+        font: normal 5vw Arial, sans-serif;
+    }
+
+    .info-text{
+        font: normal 4vw Arial, sans-serif;
+    }
+
+    .small-info-text{
+        font: normal 3vw Arial, sans-serif;
+    }
+
+    .search-block{
+        width: 80vw;
+        height: 10vw;
+    }
+
+    .word-search{
+        width: 50vw;
+        height: 10vw;
+        border-radius: 5vw;
+        padding: 0px 2vw 0px 2vw;
+        margin: 0px 2vw 0px 2vw;
+        font: normal 5vw Arial, sans-serif;
+    }
+
+    .bright-button{
+        height: 8vw;
+        border-radius: 4vw;
+        padding: 0px 2vw 0px 2vw;
+        font: normal 4vw Arial, sans-serif;
+    }
+
+    .dull-button{
+        height: 8vw;
+        border-radius: 4vw;
+        padding: 0px 2vw 0px 2vw;
+        font: normal 4vw Arial, sans-serif;
+    }
+
+    .button-search{
+        height: 10vw;
+        border-radius: 5vw;
+        font: normal 5vw Arial, sans-serif;
+    }
+
+    .button-scroll-up{
+        font: normal 5vw Arial, sans-serif;
+    }
+
+    .rhyme-word{
+        font: bold 4vw Arial, sans-serif;
+    }
+
+    .button-spinner{
+        width: 5vw;
+        height: 5vw;
+    }
+
+    .square-letter-label{
+        width: 5vw;
+        height: 5vw;
+        border-radius: 2vw;
+        font: normal 4vw Arial, sans-serif;
+    }
+
+    .square-letter-button-outline{
+        width: 5vw;
+        height: 5vw;
+        border-radius: 2vw;
+        font: normal 4vw Arial, sans-serif;
+    }
+
+    .square-letter-button-chosen{
+        width: 5vw;
+        height: 5vw;
+        border-radius: 2vw;
+        font: normal 4vw Arial, sans-serif;
+    }
+
+    .close-button{
+        width: 6vw;
+        height: 6vw;
+        border-radius: 2vw;
+        font: normal 4vw Arial, sans-serif;
+    }
+}
