@@ -2,9 +2,11 @@ from flask import Flask, render_template, redirect, request, make_response, sess
 import json
 import ryfmach
 from pprint import pprint
+import logging
 
 app = Flask(__name__, template_folder='static/templates')
 app.config['SECRET_KEY'] = 'garikgoyda_secret_key'
+app.logger.setLevel(logging.INFO)
 
 
 @app.route('/')
@@ -22,7 +24,7 @@ def update_rhymes():
         session['input_word_info'] = {'word': ''}
         return jsonify(rhymes_list=[], word_found=False)
 
-    pprint(input_word_info)
+    app.logger.info("Request rhyme: %s", str(input_word_info))
     rhymes = ryfmach.rhymes_text_list(input_word_info)
     word_found = True
     if rhymes is None:
