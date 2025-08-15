@@ -38,6 +38,16 @@ def update_rhymes():
     # return render_template('rhymes_content.html', rhymes=rhymes)
 
 
+# @app.route('/add_word')
+# def add_word_page():
+#     return render_template('add_word.html')
+
+
+# @app.route('/report')
+# def report_page():
+#     return "report page"
+
+
 @app.route('/<input_word>', methods=['GET'])
 def show_rhymes(input_word):
     if input_word == 'favicon.ico':

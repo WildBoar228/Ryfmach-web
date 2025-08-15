@@ -44,7 +44,7 @@
 
 .search-block{
     display: flex;
-    justify-content: space-around;
+    justify-content: center;
     width: 80vw;
     height: fit-content;
     margin: 10px;
@@ -188,6 +188,32 @@
     font: normal 16pt Arial, sans-serif;
 }
 
+.footer{
+    color: white;
+    font: normal 14pt Arial, sans-serif;
+    margin-top: 100px;
+    padding: 10px 30px 20px 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    height: fit-content;
+}
+
+.add-word-form{
+    background-color: rgb(255, 224, 46);
+    width: 60vw;
+    border-radius: 20px;
+    padding: 30px;
+    margin: auto;
+    margin-top: 50px;
+}
+
+.one-line-input{
+    display: block;
+    margin-top: 30px;
+}
+
 @media screen and (orientation: portrait){
     .header-block{
         padding: 5vh 5vw 5vh 5vw;
@@ -278,8 +304,8 @@
     }
 
     .close-button{
-        width: 6vw;
-        height: 6vw;
+        width: 7vw;
+        height: 7vw;
         border-radius: 2vw;
         font: normal 4vw Arial, sans-serif;
     }

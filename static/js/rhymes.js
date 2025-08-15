@@ -75,6 +75,9 @@ function process_rhymes_response(data){
     rhymes_block.innerHTML = "";
 
     rhymes_response = data;
+    
+    search_icon.style.display = "block";
+    search_spinner.style.display = "none";
 
     dropdown_choose_word.style.visibility="visible";
     dropdown_choose_word.innerHTML="-";
@@ -109,9 +112,6 @@ function process_rhymes_response(data){
             precalc_rhymes_html[i] = `<h1 class="rhyme-word" style="text-align: center">${rhymes_count_text}</h1>` + precalc_rhymes_html[i];
         }
     }
-    
-    search_icon.style.display = "block";
-    search_spinner.style.display = "none";
 
     update_rhymes(0);
 }
