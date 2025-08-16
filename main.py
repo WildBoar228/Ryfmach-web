@@ -1,8 +1,9 @@
-from flask import Flask, render_template, redirect, request, make_response, session, jsonify
+from flask import Flask, render_template, redirect, request, make_response, session, jsonify, send_from_directory
 import json
 import ryfmach
 from pprint import pprint
 import logging
+import os
 
 app = Flask(__name__, template_folder='static/templates')
 app.config['SECRET_KEY'] = 'garikgoyda_secret_key'
@@ -48,11 +49,14 @@ def update_rhymes():
 #     return "report page"
 
 
+@app.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                               'favicon.ico', mimetype='image/x-icon')
+
+
 @app.route('/<input_word>', methods=['GET'])
 def show_rhymes(input_word):
-    if input_word == 'favicon.ico':
-        input_word = ''
-
     session['input_word_info'] = {'word': input_word}
     return redirect('/')
 
