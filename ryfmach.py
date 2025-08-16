@@ -387,9 +387,12 @@ def find_rhymes(input_word: str, accent: int):
 
 
 def rhymes_text_list(input_word_info):
+    input_word_info["word"] = input_word_info["word"].replace("и", "і")
+    input_word_info["word"] = input_word_info["word"].replace("щ", "ў")
+    input_word_info["word"] = input_word_info["word"].replace("ъ", "'")
+
     if not is_belarusian(input_word_info["word"]) or len(input_word_info["word"]) > 40:
         return []
-
     if input_word_info.get("accent") is None:
         input_word_data = get_word_data(input_word_info["word"].lower())
     else:

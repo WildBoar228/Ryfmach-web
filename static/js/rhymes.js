@@ -161,6 +161,10 @@ function letter_button_onclick(index){
 function post_rhymes_request(){
     input_word = search_input_rhyme.value.toLowerCase();
     input_word = input_word.replaceAll(" ", "");
+    
+    input_word = input_word.replaceAll("и", "і");
+    input_word = input_word.replaceAll("щ", "ў");
+    input_word = input_word.replaceAll("ъ", "'");
 
     if (input_word == ""){
         dropdown_choose_word.style.visibility = "visible";
