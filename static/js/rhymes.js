@@ -173,6 +173,11 @@ function post_rhymes_request(){
         return;
     }
 
+    if (input_word.length > 40){        
+        search_status_info.innerHTML = `<div class="alert alert-danger info-text" role="alert">Нельга ўводзіць словы даўжэй за 40 літар! </div>`;
+        return;
+    }
+
     search_icon.style.display = "none";
     search_spinner.style.display = "block";
 
@@ -188,6 +193,22 @@ function post_rhymes_request(){
 
 
 function post_rhymes_with_manual_accent(){
+    if (input_word == ""){
+        dropdown_choose_word.style.visibility = "visible";
+        search_status_text.style.visibility = "visible";
+        return;
+    }
+
+    if (!is_belarusian(input_word)){        
+        search_status_info.innerHTML = `<div class="alert alert-danger info-text" role="alert">Слова павінна складацца толькі з беларускіх літар!</div>`;
+        return;
+    }
+
+    if (input_word.length > 40){        
+        search_status_info.innerHTML = `<div class="alert alert-danger info-text" role="alert">Нельга ўводзіць словы даўжэй за 40 літар! </div>`;
+        return;
+    }
+
     if (accent_index == -1){        
         search_status_info.innerHTML = `<div class="alert alert-danger info-text" role="alert">Укажыце націскную галосную</div>`
         return;
