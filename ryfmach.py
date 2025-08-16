@@ -257,10 +257,7 @@ def get_transcription(word, accent):
     return t
 
 
-similar = {#'р': 'н',
-           #'л': 'н',
-           #'м': 'н',
-           'э': 'е',
+similar = {'э': 'е',
            'я': 'а',
            'ё': 'о',
            'ю': 'у'}
@@ -331,8 +328,6 @@ def get_word_data(input_word: str):
     words = sorted(words, key=lambda w: alphabet_sort_key(w[1]))
     
     word_variants = []
-    # for w in words:
-    #     word_variants.append(get_word_dict(w))
         
     for i in range(len(words)):
         if i == 0 or not (words[i][1] == words[i - 1][1] and
@@ -373,7 +368,6 @@ def find_rhymes(input_word: str, accent: int):
 
     words = sorted(words, key=lambda w: alphabet_sort_key(w[1]))
 
-    #print(add_accent(input_word, accent), len(words), words)
     rhymes = []
     for i in range(len(words)):
         if i == 0 or not (words[i][1] == words[i - 1][1] and
@@ -393,7 +387,7 @@ def find_rhymes(input_word: str, accent: int):
 
 
 def rhymes_text_list(input_word_info):
-    if not is_belarusian(input_word_info["word"]):
+    if not is_belarusian(input_word_info["word"]) or len(input_word_info["word"]) > 40:
         return []
 
     if input_word_info.get("accent") is None:

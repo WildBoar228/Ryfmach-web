@@ -13,9 +13,8 @@ app.logger.setLevel(logging.INFO)
 @app.route('/')
 def main_page():
     input_word_info = session.get('input_word_info', {'word': ''})
-    # rhymes = ryfmach.rhymes_text_list(input_word)
     session['input_word_info'] = input_word_info
-    return render_template('index.html', input_word=input_word_info["word"]) #, rhymes=rhymes, input_word=input_word, errors=['Памылка'])
+    return render_template('index.html', input_word=input_word_info["word"])
 
 
 @app.route('/', methods=['POST'])
@@ -31,12 +30,9 @@ def update_rhymes():
     if rhymes is None:
         rhymes = []
         word_found = False
-    
-    # pprint(rhymes)
 
     session['input_word_info'] = input_word_info
     return jsonify(rhymes_list=rhymes, word_found=word_found)
-    # return render_template('rhymes_content.html', rhymes=rhymes)
 
 
 # @app.route('/add_word')
@@ -59,15 +55,6 @@ def favicon():
 def show_rhymes(input_word):
     session['input_word_info'] = {'word': input_word}
     return redirect('/')
-
-    # if input_word == '' or input_word == 'favicon.ico':
-    #     return redirect('/')
-
-    # rhymes = ryfmach.rhymes_text_list(input_word)
-    # if isinstance(rhymes, int):
-    #     return render_template('index.html')
-
-    # return render_template('index.html', rhymes=rhymes, input_word=input_word)
 
 
 if __name__ == '__main__':
