@@ -342,10 +342,15 @@ def get_working_part(word: str, accent: int):
     t = get_transcription(word, accent)
 
     acc_sound = 0
-    for i in range(len(t)):
+
+    i = 0
+    while i < len(t):
+        if i > 0 and t[i] == t[i - 1]:
+            t.pop(i)
+            continue
         if "_" in t[i]:
             acc_sound = i
-            #t[i] = t[i].replace("_", "")
+        i += 1
 
     if acc_sound == len(t) - 1 and len(t) > 1:
         return "".join(t[acc_sound - 1:])
@@ -355,6 +360,7 @@ def get_working_part(word: str, accent: int):
 
 def find_rhymes(input_word: str, accent: int):
     working_part = get_working_part(input_word, accent)
+    print(working_part)
     try:
         db_lock.acquire(True)
         words = cur.execute('''SELECT * FROM words
