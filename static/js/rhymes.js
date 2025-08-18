@@ -3,9 +3,12 @@ var vowels= "аеёіоуыэюя";
 
 var rhymes_response = [];
 var precalc_rhymes_html = [];
+var precalc_rhymes_count = [];
 
 var input_word;
 var accent_index = -1;
+var filtered_parts_of_speech = [1, 1, 1, 1, 1, 1, 1];
+var filtered_only_initial = false;
 
 const search_input_rhyme = document.getElementById("search-input-rhyme");
 const search_icon = document.getElementById("search-icon");
@@ -13,9 +16,12 @@ const search_spinner = document.getElementById("search-spinner");
 const search_status_text = document.getElementById("search-status-text");
 const search_status_info = document.getElementById("search-status-info");
 
+const word_variants_block = document.getElementById("word-variants-block");
 const dropdown_choose_word = document.getElementById("dropdown-choose-word");
 const dropdown_choose_word_menu = document.getElementById("dropdown-choose-word-menu");
 const rhymes_block = document.getElementById("rhymes-block");
+const rhymes_count_text = document.getElementById("rhyme-count-text");
+const rhymes_list = document.getElementById("rhymes-list");
 
 const manual_accent_modal = new bootstrap.Modal(document.getElementById('manual-accent-modal'));
 const letter_buttons_block = document.getElementById("letter-buttons-block");
@@ -67,22 +73,22 @@ function word_data_to_html(word_data, classes_normal="info-text", classes_accent
 function update_rhymes(word_variant_index){
     dropdown_choose_word.innerHTML = word_data_to_html(rhymes_response.rhymes_list[word_variant_index].word_variant);
     
-    rhymes_block.innerHTML = precalc_rhymes_html[word_variant_index];
+    rhymes_list.innerHTML = precalc_rhymes_html[word_variant_index];
+    rhymes_count_text.innerHTML = precalc_rhymes_count[word_variant_index];
 }
 
 
 function process_rhymes_response(data){
-    rhymes_block.innerHTML = "";
+    rhymes_list.innerHTML = "";
 
     rhymes_response = data;
     
     search_icon.style.display = "block";
     search_spinner.style.display = "none";
 
-    dropdown_choose_word.style.visibility="visible";
+    word_variants_block.style.visibility="visible";
     dropdown_choose_word.innerHTML="-";
     dropdown_choose_word_menu.innerHTML = "";
-    search_status_text.style.visibility = "visible";
     search_status_text.innerHTML = `Варыянты: ${Object.keys(data.rhymes_list).length}`;
     search_status_info.innerHTML = "";
 
@@ -90,6 +96,8 @@ function process_rhymes_response(data){
         generate_letter_buttons();
         return;
     }
+    
+    rhymes_block.style.display = "block";
 
     for (i in data.rhymes_list){
         word_data = data.rhymes_list[i].word_variant;
@@ -98,18 +106,20 @@ function process_rhymes_response(data){
         precalc_rhymes_html[i] = "";
         const rhymes_data = data.rhymes_list[i].rhymes_data;
 
-        for (j in rhymes_data){
-            precalc_rhymes_html[i] += `<li>${word_data_to_html(rhymes_data[j], classes_normal="rhyme-word")}</li>`;
-        }
-
         if (rhymes_data.length == 0){
             precalc_rhymes_html[i] += `<div class="alert alert-info info-text" role="alert">Пу-пу-пу! Рыфмаў не знайшлося. Паспрабуйце іншае слова. Падказка: чым бліжэй націск да канца слова, тым лягчэй знайсці рыфму.</div>`;
+            precalc_rhymes_count[i] = ` - `;
         }
         else{
-            let rhymes_count_text = `Рыфмы: ${rhymes_data.length}`;
+            rhymes_count_text.innerHTML = `Рыфмы: ${rhymes_data.length}`;
             if (rhymes_data.length == 1000)
-                rhymes_count_text += `<span style="color: red">(!)</span>`
-            precalc_rhymes_html[i] = `<h1 class="rhyme-word" style="text-align: center">${rhymes_count_text}</h1>` + precalc_rhymes_html[i];
+                rhymes_count_text.innerHTML += `<span style="color: red">(!)</span>`
+            precalc_rhymes_count[i] = rhymes_count_text.innerHTML;
+            // precalc_rhymes_html[i] = `<h1 class="rhyme-word" style="text-align: center">${rhymes_count_text}</h1>` + precalc_rhymes_html[i];
+        }
+
+        for (j in rhymes_data){
+            precalc_rhymes_html[i] += `<li>${word_data_to_html(rhymes_data[j], classes_normal="rhyme-word")}</li>`;
         }
     }
 
@@ -167,8 +177,7 @@ function post_rhymes_request(){
     input_word = input_word.replaceAll("ъ", "'");
 
     if (input_word == ""){
-        dropdown_choose_word.style.visibility = "visible";
-        search_status_text.style.visibility = "visible";
+        word_variants_block.style.visibility = "visible";
         return;
     }
 
@@ -184,13 +193,18 @@ function post_rhymes_request(){
 
     search_icon.style.display = "none";
     search_spinner.style.display = "block";
+    rhymes_block.style.display = "none";
 
     $.ajax({
         url: "/",
         method: "post",
         dataType: "json",
         contentType: "application/json",
-        data: JSON.stringify({"word": input_word}),
+        data: JSON.stringify({
+            "word": input_word,
+            "filter_posp": filtered_parts_of_speech,
+            "only_initial": filtered_only_initial,
+        }),
         success: process_rhymes_response,
     });
 }
@@ -198,8 +212,7 @@ function post_rhymes_request(){
 
 function post_rhymes_with_manual_accent(){
     if (input_word == ""){
-        dropdown_choose_word.style.visibility = "visible";
-        search_status_text.style.visibility = "visible";
+        word_variants_block.style.visibility = "visible";
         return;
     }
 
@@ -229,9 +242,56 @@ function post_rhymes_with_manual_accent(){
         method: "post",
         dataType: "json",
         contentType: "application/json",
-        data: JSON.stringify({"word": input_word, "accent": accent_index}),
+        data: JSON.stringify({
+            "word": input_word,
+            "accent": accent_index,
+            "filter_posp": filtered_parts_of_speech,
+            "only_initial": filtered_only_initial,
+        }),
         success: process_rhymes_response,
     });
+}
+
+
+function update_filters(){
+    for (i = 1; i <= 7; ++i){
+        filtered_parts_of_speech[i - 1] = document.getElementById(`check-posp-${i}`).checked;
+    }
+    filtered_only_initial = document.getElementById(`check-only-initial`).checked;
+
+    search_status_info.innerHTML = "";
+    search_icon.style.display = "none";
+    search_spinner.style.display = "block";
+
+    if (accent_index == -1){
+        $.ajax({
+            url: "/",
+            method: "post",
+            dataType: "json",
+            contentType: "application/json",
+            data: JSON.stringify({
+                "word": input_word,
+                "filtered_posp": filtered_parts_of_speech,
+                "only_initial": filtered_only_initial,
+            }),
+            success: process_rhymes_response,
+        });
+    }
+    else{
+        $.ajax({
+            url: "/",
+            method: "post",
+            dataType: "json",
+            contentType: "application/json",
+            data: JSON.stringify({
+                "word": input_word,
+                "accent": accent_index,
+                "filtered_posp": filtered_parts_of_speech,
+                "only_initial": filtered_only_initial,
+            }),
+            success: process_rhymes_response,
+        });
+    }
 }
 
 

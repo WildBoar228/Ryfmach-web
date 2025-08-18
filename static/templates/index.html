@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.2.1/dist/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="{{url_for('static', filename='css/style.css')}}">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
     <title>Рыфмач - падабраць рыфму</title>
 </head>
@@ -20,17 +20,17 @@
         </p>
     </div>
 
-    <div class="center-block">
+    <div id="search-block" class="center-block">
         <div class="search-block">
             <input type="search" class="word-search" id="search-input-rhyme" placeholder="Увядзіце слова..." value="{{ input_word }}" autocomplete="off" autofocus >
             <button type="button" class="button-search bright-button" onclick="post_rhymes_request();">
                 <i id="search-icon" class="fa fa-search" width="30pt"></i>
-                <div id="search-spinner" class="spinner-border button-spinner" style="display: none"></div>
+                <div id="search-spinner" class="spinner-border spinner-border-sm button-spinner" style="display: none"></div>
             </button>
         </div>
     </div>
     
-    <div class="center-block" id="search-status-info"> </div>
+    <div id="search-status-info" class="center-block"> </div>
 
     <div class="modal" tabindex="-1" id="manual-accent-modal">
         <div class="modal-dialog">
@@ -49,16 +49,16 @@
                     
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="dull-button" data-bs-dismiss="modal">Адмена</button>
-                    <button type="button" class="bright-button" onclick="post_rhymes_with_manual_accent()">Далей</button>
+                    <button type="button" class="dull-button rhyme-word" data-bs-dismiss="modal">Адмена</button>
+                    <button type="button" class="bright-button rhyme-word" onclick="post_rhymes_with_manual_accent()">Далей</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="center-block">
+    <div id="word-variants-block" class="center-block" style="visibility: hidden">
         <div class="dropdown">
-            <button class="btn dropdown-light rhyme-word" type="button" id="dropdown-choose-word" data-bs-toggle="dropdown" aria-expanded="false" style="visibility: hidden">
+            <button class="dropdown-light rhyme-word" type="button" id="dropdown-choose-word" data-bs-toggle="dropdown" aria-expanded="false">
                 -
             </button>
             <ul class="dropdown-menu" id="dropdown-choose-word-menu" aria-labelledby="dropdown-choose-word">
@@ -66,15 +66,96 @@
             </ul>
         </div>
         <div class="info-text">
-            <p id="search-status-text" style="margin: 20px; visibility: hidden">Нічога няма</p>
+            <p id="search-status-text" style="margin: 20px;">Нічога няма</p>
         </div>
     </div>
 
     <div id="error-msg"></div>
 
-    <ul id="rhymes-block" class="rhymes-block">
-    {% include "rhymes_content.html" %}
-    </ul>
+    <div class="rhymes-block" id="rhymes-block" style="display: none">
+        <div class="center-block" style="display: flex; gap: 20px;">
+            <h1 class="rhyme-word" id="rhyme-count-text"></h1>
+            <button type="button" class="button-filters dull-button" data-bs-toggle="offcanvas" data-bs-target="#filters-offcanvas" aria-controls="filters-offcanvas">
+                <i id="filters-icon" class="fa fa-filter" width="30pt"></i>
+            </button>
+        </div>
+        <ul id="rhymes-list">
+        {% include "rhymes_content.html" %}
+        </ul>
+    </div>
+
+    <div class="offcanvas offcanvas-start" tabindex="-1" id="filters-offcanvas" aria-labelledby="filters-offcanvasExampleLabel">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title" id="filters-offcanvasExampleLabel">Фільтры</h5>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body">
+            <div>
+                <h1 class="mid-header">Часціны мовы</h1>
+                
+                <div class="form-check">
+                    <input class="yellow-checkbox" type="checkbox" value="" id="check-posp-1" checked>
+                    <label class="small-info-text" for="check-posp-1">
+                        Назоўнік
+                    </label>
+                </div>
+                
+                <div class="form-check">
+                    <input class="yellow-checkbox" type="checkbox" value="" id="check-posp-2" checked>
+                    <label class="small-info-text" for="check-posp-2">
+                        Дзеяслоў
+                    </label>
+                </div>
+                
+                <div class="form-check">
+                    <input class="yellow-checkbox" type="checkbox" value="" id="check-posp-3" checked>
+                    <label class="small-info-text" for="check-posp-3">
+                        Прыметнік
+                    </label>
+                </div>
+                
+                <div class="form-check">
+                    <input class="yellow-checkbox" type="checkbox" value="" id="check-posp-4" checked>
+                    <label class="small-info-text" for="check-posp-4">
+                        Займеннік
+                    </label>
+                </div>
+                
+                <div class="form-check">
+                    <input class="yellow-checkbox" type="checkbox" value="" id="check-posp-5" checked>
+                    <label class="small-info-text" for="check-posp-5">
+                        Лічэбнік
+                    </label>
+                </div>
+                
+                <div class="form-check">
+                    <input class="yellow-checkbox" type="checkbox" value="" id="check-posp-6" checked>
+                    <label class="small-info-text" for="check-posp-6">
+                        Прыслоўе
+                    </label>
+                </div>
+                
+                <div class="form-check">
+                    <input class="yellow-checkbox" type="checkbox" value="" id="check-posp-7" checked>
+                    <label class="small-info-text" for="check-posp-7">
+                        Службовыя
+                    </label>
+                </div>
+                
+                <h1 class="mid-header">Форма</h1>
+                
+                <div class="form-check">
+                    <input class="yellow-checkbox" type="checkbox" value="" id="check-only-initial">
+                    <label class="small-info-text" for="check-only-initial">
+                        Толькі пачатковая
+                    </label>
+                </div>
+            </div>
+
+            <br>
+            <button type="button" class="bright-button rhyme-word" onclick="update_filters()" data-bs-dismiss="offcanvas">Захаваць</button>
+        </div>
+    </div>
 
     <button class="button-scroll-up bright-button" onclick="scroll_up()">
         <i class="fa fa-chevron-up"></i>
@@ -88,6 +169,7 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"
         integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
         crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
     <script src="{{url_for('static', filename='js/rhymes.js')}}" type="text/javascript"></script>
 </body>
 </html>

@@ -325,7 +325,7 @@ def get_word_data(input_word: str):
     finally:
         db_lock.release()
     
-    words = sorted(words, key=lambda w: alphabet_sort_key(w[1]))
+    words = sorted(words, key=lambda w: (alphabet_sort_key(w[1])))
     
     word_variants = []
         
@@ -348,6 +348,9 @@ def get_working_part(word: str, accent: int):
         if i > 0 and t[i] == t[i - 1]:
             t.pop(i)
             continue
+
+        t[i] = t[i].replace("і", "ы")
+        
         if "_" in t[i]:
             acc_sound = i
         i += 1
@@ -358,7 +361,10 @@ def get_working_part(word: str, accent: int):
     return "".join(t[acc_sound:])
 
 
-def find_rhymes(input_word: str, accent: int):
+def find_rhymes(input_word: str,
+                accent: int,
+                filtered_posp: list[bool] = [True, True, True, True, True, True, True,],
+                only_initial: bool = False):
     working_part = get_working_part(input_word, accent)
     print(working_part)
     try:
@@ -372,22 +378,24 @@ def find_rhymes(input_word: str, accent: int):
     finally:
         db_lock.release()
 
-    words = sorted(words, key=lambda w: alphabet_sort_key(w[1]))
+    words = sorted(words, key=lambda w: (alphabet_sort_key(w[1])))
 
     rhymes = []
     for i in range(len(words)):
-        if i == 0 or not (words[i][1] == words[i - 1][1] and
-                          words[i][2] == words[i - 1][2] and
-                          words[i][4] == words[i - 1][4]):
-            rhymes.append(get_word_dict(words[i]))
+        if ((i == 0 or not (words[i][1] == words[i - 1][1] and
+                            words[i][2] == words[i - 1][2] and
+                            words[i][4] == words[i - 1][4])) and
+            filtered_posp[words[i][3] - 1] and (words[i][0] == words[i][2] or not only_initial)):
+                rhymes.append(get_word_dict(words[i]))
     
     if len(rhymes) > 1000:
-        only_initial = list(filter(lambda w: w["is_initial"] == True, rhymes))
-        if len(only_initial) > 1000:
-            rhymes = only_initial[:1000]
-        else:
-            rhymes = only_initial + rhymes[:1000 - len(only_initial)]
-            rhymes = sorted(rhymes, key=lambda w: alphabet_sort_key(w["word"]))
+        rhymes = rhymes[:1000]
+        # only_initial = list(filter(lambda w: w["is_initial"] == True, rhymes))
+        # if len(only_initial) > 1000:
+        #     rhymes = only_initial[:1000]
+        # else:
+        #     rhymes = only_initial + rhymes[:1000 - len(only_initial)]
+        #     rhymes = sorted(rhymes, key=lambda w: (alphabet_sort_key(w[1])))
     
     return rhymes
 
@@ -403,12 +411,17 @@ def rhymes_text_list(input_word_info):
         input_word_data = get_word_data(input_word_info["word"].lower())
     else:
         input_word_data = [input_word_info]
+    
+    filtered_posp = input_word_info.get("filtered_posp", [True] * 7)
+    only_initial = input_word_info.get("only_initial", False)
 
     rhymes = []
     for i in range(len(input_word_data)):
         rhymes.append({"word_variant": input_word_data[i],
                        "rhymes_data": find_rhymes(input_word_data[i]["word"],
-                                                  input_word_data[i]["accent"])})
+                                                  input_word_data[i]["accent"],
+                                                  filtered_posp=filtered_posp,
+                                                  only_initial=only_initial)})
     
     return rhymes
 
