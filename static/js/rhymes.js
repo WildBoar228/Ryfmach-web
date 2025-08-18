@@ -176,6 +176,8 @@ function post_rhymes_request(){
     input_word = input_word.replaceAll("щ", "ў");
     input_word = input_word.replaceAll("ъ", "'");
 
+    accent_index = -1;
+
     if (input_word == ""){
         word_variants_block.style.visibility = "visible";
         return;
