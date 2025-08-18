@@ -146,11 +146,14 @@ function generate_letter_buttons(){
     for (char in word){
         if (vowels.includes(word[char])){
             letters_div.innerHTML += `\n<button type="button" class="square-letter-button-outline" onclick="letter_button_onclick(${char})" id="letter_btn${char}">${word[char]}</button>`;
+            accent_index = char;
         }
         else{
             letters_div.innerHTML += `\n<div class="square-letter-label"><label>${word[char]}</label></div>`;
         }
     }
+
+    letter_button_onclick(accent_index);
 }
 
 
