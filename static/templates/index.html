@@ -11,12 +11,14 @@
     <title>Рыфмач - падабраць рыфму</title>
 </head>
 <body>
+
     <div class="header-block">
+        <img src="{{ url_for('static', filename='img/logo.png') }}" class="main-logo">
         <p class="greeting">
             Вітаю!
         </p>
         <p class="description">
-            Рыфмач - Ваш дапаможнік у складанні вершаў. Увядзіце слова, каб падабраць да яго рыфму.
+            Рыфмач - Ваш дапаможнік у складанні вершаў на беларускай мове. Увядзіце слова, каб падабраць да яго рыфму.
         </p>
     </div>
 
@@ -75,7 +77,7 @@
     <div class="rhymes-block" id="rhymes-block" style="display: none">
         <div class="center-block" style="display: flex; gap: 20px;">
             <h1 class="rhyme-word" id="rhyme-count-text"></h1>
-            <button type="button" class="button-filters dull-button" data-bs-toggle="offcanvas" data-bs-target="#filters-offcanvas" aria-controls="filters-offcanvas">
+            <button type="button" class="button-filters modest-button" data-bs-toggle="offcanvas" data-bs-target="#filters-offcanvas" aria-controls="filters-offcanvas">
                 <i id="filters-icon" class="fa fa-filter" width="30pt"></i>
             </button>
         </div>
@@ -161,10 +163,28 @@
         <i class="fa fa-chevron-up"></i>
     </button>
 
-    <!-- <div class="footer">
-        <a href="/add_word">Дадаць слова ў слоўнік</a>
-        <a href="/report">Паведаміць пра недакладнасць</a>
-    </div> -->
+    <div class="faq-block">
+        <div style="margin-bottom: 70px">
+            <p class="mid-header"> Як працуе пошук рыфмаў? </p>
+            <p class="info-text"> Рыфмач выкарыстоўвае вялікую базу дадзеных, каб знайсці слова, якое Вы ўвялі, і вызначыць ў ім націск. Калі слоў з такім напісаннем некалькі, Вы можаце абраць любы варыянт з дапамогай блакітнай кнопкі. Пасля Рыфмач будуе транскрыпцыю і падбірае падобныя па гучанні словы. </p>
+        </div>
+        <div style="margin-bottom: 70px">
+            <p class="mid-header"> Як знайсці рыфму да слова, якога няма ў базе? </p>
+            <p class="info-text"> У такім выпадку Вам будзе прапанавана ўказаць націскную галосную самастойна, гэтага дастаткова для пошуку. </p>
+        </div>
+        <div style="margin-bottom: 70px">
+            <p class="mid-header"> Не знайшлося ніводнай рыфмы, як з гэтым жыць? </p>
+            <p class="info-text"> На жаль, так бывае. Паспрабуйце замяніць слова на сінонім. Калі вы ведаеце рыфму, якой не ведае Рыфмач, або Вы сутыкнуліся з іншай праблемай, калі ласка, напішыце пра гэта на пошту <a style="color: rgb(223, 189, 0);" href="mailto:issues@ryfmach.online">issues@ryfmach.online</a>. </p>
+        </div>
+        <div style="margin-bottom: 70px">
+            <p class="mid-header"> Я бачу зашмат падобных рыфмаў, што рабіць? </p>
+            <p class="info-text"> Вы можаце выкарыстоўваць фільтры (<i class="fa fa-filter" aria-hidden="true"></i>), каб прыбраць славаформы або словы пэўных часцін мовы. </p>
+        </div>
+        <div style="margin-bottom: 70px">
+            <p class="mid-header"> Мне вельмі падабаецца Рыфмач. Як я магу дапамагчы праэкту? </p>
+            <p class="info-text"> Мы стараемся! 😀 Распавядзіце пра Рыфмача сваім сябрам і іншым аматарам вершаў, каб і яны маглі карыстацца сайтам! </p>
+        </div>
+    </div>
     
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"
         integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="

@@ -1,0 +1,12 @@
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION BEGIN
+PassengerAppRoot "/home/ryfmachonl/flaskapp"
+PassengerBaseURI "/"
+PassengerPython "/home/ryfmachonl/virtualenv/flaskapp/3.12/bin/python"
+PassengerAppLogFile "/home/ryfmachonl/flaskapp/logging.log"
+# DO NOT REMOVE. CLOUDLINUX PASSENGER CONFIGURATION END
+RewriteEngine on
+RewriteRule ^http://%{HTTP_HOST}%{REQUEST_URI} [END,NE]
+# DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION BEGIN
+<IfModule Litespeed>
+</IfModule>
+# DO NOT REMOVE OR MODIFY. CLOUDLINUX ENV VARS CONFIGURATION END

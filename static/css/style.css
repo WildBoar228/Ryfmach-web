@@ -1,9 +1,20 @@
+.main-logo{
+    margin: 0px auto 50px auto;
+    width: 50vmin;
+}
+
 .header-block{
     align-self: center;
     width: 100%;
     display: flex;
     flex-direction: column;
     padding: 10vh 10vw 10vh 10vw;
+}
+
+.faq-block{
+    margin: 50px auto 50px auto;
+    width: 90vmin;
+    text-align: left;
 }
 
 .greeting{
@@ -26,6 +37,11 @@
 
 .info-text{
     font: normal 16pt Arial, sans-serif;
+    margin: 0;
+}
+
+.weighty-info-text{
+    font: bold 18pt Arial, sans-serif;
     margin: 0;
 }
 
@@ -82,6 +98,18 @@
     padding: 0 10px 0 10px;
     background-color: gray;
     color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modest-button{
+    height: 30pt;
+    border-radius: 15pt;
+    padding: 0 10px 0 10px;
+    background-color: white;
+    border-color: black;
+    color: black;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -245,8 +273,16 @@
 }
 
 @media screen and (orientation: portrait){
+    .main-logo{
+        width: 70vw;
+    }
+
     .header-block{
         padding: 5vh 5vw 5vh 5vw;
+    }
+
+    .faq-block{
+        width: 80vw;
     }
 
     .greeting{
@@ -263,6 +299,11 @@
 
     .info-text{
         font: normal 5vw Arial, sans-serif;
+    }
+
+    .weighty-info-text{
+        font: bold 6vw Arial, sans-serif;
+        margin: 0;
     }
 
     .small-info-text{
