@@ -51,10 +51,10 @@ def favicon():
                                'favicon.ico', mimetype='image/x-icon')
 
 
-@app.route('/<input_word>', methods=['GET'])
-def show_rhymes(input_word):
-    session['input_word_info'] = {'word': input_word}
-    return redirect('/')
+# @app.route('/<input_word>', methods=['GET'])
+# def show_rhymes(input_word):
+#     session['input_word_info'] = {'word': input_word}
+#     return redirect('/')
 
 
 if __name__ == '__main__':
