@@ -387,6 +387,10 @@ def get_working_part(word: str, accent: int, mistake: int = 0):
                 if is_ring(t[i]) and thud_pair(t[i]):
                     t[i] = thud_pair(t[i])
             
+            if is_consonant_sound(t[i]) and (i == len(t) - 1 or not is_vowel(t[i + 1])):
+                if is_soft(t[i]) and hard_pair(t[i]):
+                    t[i] = hard_pair(t[i])
+            
             i += 1
     
     # слабая рыфма
@@ -542,7 +546,9 @@ if __name__ == "__main__":
          ("нарэжце", 3),
          ("матчын", 1),
          ("кладцы", 2),
-         ("разводдзе", 4),]
+         ("разводдзе", 4),
+         ("ерась", 0),
+         ("верас", 1),]
 
     for i, test in enumerate(tests):
         print(f'{i}  {test[0]}:    {' '.join(get_transcription(*test))}')
