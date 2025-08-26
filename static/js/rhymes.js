@@ -9,6 +9,7 @@ var input_word;
 var accent_index = -1;
 var filtered_parts_of_speech = [1, 1, 1, 1, 1, 1, 1];
 var filtered_only_initial = false;
+var search_mistake = 0;
 
 const search_input_rhyme = document.getElementById("search-input-rhyme");
 const search_icon = document.getElementById("search-icon");
@@ -107,7 +108,7 @@ function process_rhymes_response(data){
         const rhymes_data = data.rhymes_list[i].rhymes_data;
 
         if (rhymes_data.length == 0){
-            precalc_rhymes_html[i] += `<div class="alert alert-info info-text" role="alert">Пу-пу-пу! Рыфмаў не знайшлося. Паспрабуйце іншае слова. Падказка: чым бліжэй націск да канца слова, тым лягчэй знайсці рыфму.</div>`;
+            precalc_rhymes_html[i] += `<div class="alert alert-info info-text" role="alert">Пу-пу-пу! Рыфмаў абранай трапнасці не знайшлося. Змяніце фільтры або паспрабуйце іншае слова.</div>`;
             precalc_rhymes_count[i] = ` - `;
         }
         else{
@@ -146,7 +147,7 @@ function generate_letter_buttons(){
     for (char in word){
         if (vowels.includes(word[char])){
             letters_div.innerHTML += `\n<button type="button" class="square-letter-button-outline" onclick="letter_button_onclick(${char})" id="letter_btn${char}">${word[char]}</button>`;
-            accent_index = char;
+            accent_index = parseInt(char);
         }
         else{
             letters_div.innerHTML += `\n<div class="square-letter-label"><label>${word[char]}</label></div>`;
@@ -209,6 +210,7 @@ function post_rhymes_request(){
             "word": input_word,
             "filter_posp": filtered_parts_of_speech,
             "only_initial": filtered_only_initial,
+            "search_mistake": search_mistake,
         }),
         success: process_rhymes_response,
     });
@@ -252,6 +254,7 @@ function post_rhymes_with_manual_accent(){
             "accent": accent_index,
             "filter_posp": filtered_parts_of_speech,
             "only_initial": filtered_only_initial,
+            "search_mistake": search_mistake,
         }),
         success: process_rhymes_response,
     });
@@ -263,6 +266,16 @@ function update_filters(){
         filtered_parts_of_speech[i - 1] = document.getElementById(`check-posp-${i}`).checked;
     }
     filtered_only_initial = document.getElementById(`check-only-initial`).checked;
+    search_mistake = parseInt($("#search-mistake-radio :input:radio:checked").val());
+
+    new_input = search_input_rhyme.value.toLowerCase().replaceAll(" ", "").replaceAll("и", "і").replaceAll("щ", "ў").replaceAll("ъ", "'");
+    if (new_input != input_word){
+        input_word = new_input;
+        accent_index = -1;
+    }
+
+    if (input_word == "" || !is_belarusian(input_word) || input_word.length > 40)
+        return;
 
     search_status_info.innerHTML = "";
     search_icon.style.display = "none";
@@ -278,6 +291,7 @@ function update_filters(){
                 "word": input_word,
                 "filtered_posp": filtered_parts_of_speech,
                 "only_initial": filtered_only_initial,
+                "search_mistake": search_mistake,
             }),
             success: process_rhymes_response,
         });
@@ -293,6 +307,7 @@ function update_filters(){
                 "accent": accent_index,
                 "filtered_posp": filtered_parts_of_speech,
                 "only_initial": filtered_only_initial,
+                "search_mistake": search_mistake,
             }),
             success: process_rhymes_response,
         });

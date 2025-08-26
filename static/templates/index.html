@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="{{url_for('static', filename='css/style.css') + '?ver=1.1'}}">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
     <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}" type="image/x-icon">
-    <title>Рыфмач - падабраць рыфму</title>
+    <title>Рыфмач&nbsp;&ndash; падабраць рыфму</title>
 </head>
 <body>
 
@@ -18,13 +18,16 @@
             Вітаю!
         </p>
         <p class="description">
-            Рыфмач - Ваш дапаможнік у складанні вершаў на беларускай мове. Увядзіце слова, каб падабраць да яго рыфму.
+            Рыфмач&nbsp;&ndash; Ваш дапаможнік у складанні вершаў на беларускай мове. Увядзіце слова, каб падабраць да яго рыфму.
         </p>
     </div>
 
     <div id="search-block" class="center-block">
         <div class="search-block">
             <input type="search" class="word-search" id="search-input-rhyme" placeholder="Увядзіце слова..." value="{{ input_word }}" autocomplete="off" autofocus >
+            <button type="button" class="button-filters modest-button" data-bs-toggle="offcanvas" data-bs-target="#filters-offcanvas" aria-controls="filters-offcanvas">
+                <i id="filters-icon" class="fa fa-filter" width="30pt"></i>
+            </button>
             <button type="button" class="button-search bright-button" onclick="post_rhymes_request();">
                 <i id="search-icon" class="fa fa-search" width="30pt"></i>
                 <div id="search-spinner" class="spinner-border spinner-border-sm button-spinner" style="display: none"></div>
@@ -77,9 +80,6 @@
     <div class="rhymes-block" id="rhymes-block" style="display: none">
         <div class="center-block" style="display: flex; gap: 20px;">
             <h1 class="rhyme-word" id="rhyme-count-text"></h1>
-            <button type="button" class="button-filters modest-button" data-bs-toggle="offcanvas" data-bs-target="#filters-offcanvas" aria-controls="filters-offcanvas">
-                <i id="filters-icon" class="fa fa-filter" width="30pt"></i>
-            </button>
         </div>
         <ul id="rhymes-list">
         {% include "rhymes_content.html" %}
@@ -93,6 +93,31 @@
         </div>
         <div class="offcanvas-body">
             <div>
+                <h1 class="mid-header">Трапнасць пошуку</h1>
+
+                <div id="search-mistake-radio">
+                    <div class="form-check">
+                        <input class="yellow-checkbox" type="radio" name="radioMistake" id="radio-mistake-0" value="0" checked>
+                        <label class="small-info-text" for="radio-mistake-0">
+                            Ідэяльная
+                        </label>
+                    </div>
+
+                    <div class="form-check">
+                        <input class="yellow-checkbox" type="radio" name="radioMistake" id="radio-mistake-1" value="1">
+                        <label class="small-info-text" for="radio-mistake-1">
+                            Добрая
+                        </label>
+                    </div>
+
+                    <div class="form-check">
+                        <input class="yellow-checkbox" type="radio" name="radioMistake" id="radio-mistake-2" value="2">
+                        <label class="small-info-text" for="radio-mistake-2">
+                            Слабая
+                        </label>
+                    </div>
+                </div>
+
                 <h1 class="mid-header">Часціны мовы</h1>
                 
                 <div class="form-check">
@@ -174,7 +199,7 @@
         </div>
         <div style="margin-bottom: 70px">
             <p class="mid-header"> Не знайшлося ніводнай рыфмы, як з гэтым жыць? </p>
-            <p class="info-text"> На жаль, так бывае. Паспрабуйце замяніць слова на сінонім. Калі вы ведаеце рыфму, якой не ведае Рыфмач, або Вы сутыкнуліся з іншай праблемай, калі ласка, напішыце пра гэта на пошту <a style="color: rgb(223, 189, 0);" href="mailto:issues@ryfmach.online">issues@ryfmach.online</a>. </p>
+            <p class="info-text"> На жаль, так бывае. З дапамогай фільтра "Трапнасць пошуку" Вы можаце знайсці меней строгія рыфмы. Калі вы ведаеце рыфму, якой не ведае Рыфмач, або Вы сутыкнуліся з іншай праблемай, калі ласка, напішыце пра гэта на пошту <a style="color: rgb(223, 189, 0);" href="mailto:issues@ryfmach.online">issues@ryfmach.online</a>. </p>
         </div>
         <div style="margin-bottom: 70px">
             <p class="mid-header"> Я бачу зашмат падобных рыфмаў, што рабіць? </p>

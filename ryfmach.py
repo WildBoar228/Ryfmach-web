@@ -62,6 +62,9 @@ cons_sounds =      [[["б", "б'"],
                      [None, None]],]
 
 
+group_base_sound = ["б", "в", "г", "к", "д", "ц", "ж", "з", "й", "л", "м", "н", "р", "ф", "ч", "ў"]
+
+
 cons_data =  {'б': (0, 0, 0), "б'": (0, 0, 1),
                'п': (0, 1, 0), "п'": (0, 1, 1),
 
@@ -338,41 +341,109 @@ def get_word_data(input_word: str):
     return word_variants
 
 
-def get_working_part(word: str, accent: int):
+def get_working_part(word: str, accent: int, mistake: int = 0):
     t = get_transcription(word, accent)
 
     acc_sound = 0
 
+    # ідэяльная рыфма
     i = 0
     while i < len(t):
-        if i > 0 and t[i] == t[i - 1]:
-            t.pop(i)
+        if i > 0 and (t[i] == t[i - 1] or t[i] in ["дз", "дз'", "дж"] and t[i - 1] in ["д"]):
+            t.pop(i - 1)
             continue
 
-        t[i] = t[i].replace("і", "ы")
+        if t[i] == "_ы_":
+            t[i] = "_і_"
         
         if "_" in t[i]:
             acc_sound = i
         i += 1
 
-    if acc_sound == len(t) - 1 and len(t) > 1:
-        return "".join(t[acc_sound - 1:])
+    if acc_sound == len(t) - 1 and len(t) > 1 and mistake < 2:
+        t = t[acc_sound - 1:]
+    else:
+        t = t[acc_sound:]
     
-    return "".join(t[acc_sound:])
+    # добрая рыфма
+    if mistake >= 1:
+        i = 0
+        while i < len(t):
+            if i > 0 and is_soft(t[i - 1]):
+                if t[i] == "э":
+                    t[i] = "і"
+                elif t[i] == "а":
+                    t[i] = "і"
+                elif t[i] == "у":
+                    t[i] = "і"
+            elif t[i] == "э":
+                t[i] = "ы"
+            elif t[i] == "а":
+                t[i] = "ы"
+            elif t[i] == "у":
+                t[i] = "ы"
+
+            if i > 0 and i < len(t) - 1 and is_consonant_sound(t[i]):
+                if is_ring(t[i]) and thud_pair(t[i]):
+                    t[i] = thud_pair(t[i])
+            
+            i += 1
+    
+    # слабая рыфма
+    if mistake >= 2:
+        i = 0
+        while i < len(t):
+            if t[i] in ["й", "ў"]:
+                t.pop(i)
+                continue
+
+            if i < len(t) - 1:
+                if is_sonor(t[i]):
+                    t[i] = "л"
+                elif is_hiss(t[i]):
+                    t[i] = "ш"
+                elif is_whistl(t[i]):
+                    t[i] = "с"
+            
+            i += 1
+    
+    i = 0
+    while i < len(t):
+        if i > 0 and (t[i] == t[i - 1] or t[i] in ["дз", "дз'", "дж"] and t[i - 1] in ["д"]):
+            t.pop(i - 1)
+            continue
+        i += 1
+    
+    return "".join(t)
 
 
 def find_rhymes(input_word: str,
                 accent: int,
                 filtered_posp: list[bool] = [True, True, True, True, True, True, True,],
-                only_initial: bool = False):
-    working_part = get_working_part(input_word, accent)
-    print(working_part)
+                only_initial: bool = False,
+                mistake: int = 0):
+    print(get_transcription(input_word, accent))
+    working_part0 = get_working_part(input_word, accent, 0)
+    working_part1 = get_working_part(input_word, accent, 1)
+    working_part2 = get_working_part(input_word, accent, 2)
+    print(f'{working_part0} \t {working_part1} \t {working_part2}')
     try:
         db_lock.acquire(True)
-        words = cur.execute('''SELECT * FROM words
-                                WHERE working_part == ? AND word != ?
-                                ORDER BY word, initial_id, accent_index;''',
-                                    (working_part, input_word)).fetchall()
+        if mistake == 0:
+            words = cur.execute('''SELECT * FROM words
+                                    WHERE working_part0 == ? AND word != ?
+                                    ORDER BY word, initial_id, accent_index;''',
+                                        (working_part0, input_word)).fetchall()
+        elif mistake == 1:
+            words = cur.execute('''SELECT * FROM words
+                                    WHERE working_part0 != ? AND working_part1 == ? AND word != ?
+                                    ORDER BY word, initial_id, accent_index;''',
+                                        (working_part0, working_part1, input_word)).fetchall()
+        elif mistake == 2:
+            words = cur.execute('''SELECT * FROM words
+                                    WHERE working_part0 != ? AND working_part1 != ? AND working_part2 == ? AND word != ?
+                                    ORDER BY word, initial_id, accent_index;''',
+                                        (working_part0, working_part1, working_part2, input_word)).fetchall()
     except Exception as exc:
         print(exc)
     finally:
@@ -414,6 +485,7 @@ def rhymes_text_list(input_word_info):
     
     filtered_posp = input_word_info.get("filtered_posp", [True] * 7)
     only_initial = input_word_info.get("only_initial", False)
+    mistake = input_word_info.get("search_mistake", 0)
 
     rhymes = []
     for i in range(len(input_word_data)):
@@ -421,7 +493,8 @@ def rhymes_text_list(input_word_info):
                        "rhymes_data": find_rhymes(input_word_data[i]["word"],
                                                   input_word_data[i]["accent"],
                                                   filtered_posp=filtered_posp,
-                                                  only_initial=only_initial)})
+                                                  only_initial=only_initial,
+                                                  mistake=mistake)})
     
     return rhymes
 
@@ -435,175 +508,46 @@ db_lock = threading.Lock()
 if __name__ == "__main__":
     tests = []
 
-    import random
-    for i in range(30):
-        resp = cur.execute(
-                    '''SELECT word, accent_index FROM words WHERE id == ?''',
-                    (random.randint(1, 1000000),)
-                ).fetchone()
-        if resp:
-            tests.append(resp)
+    # import random
+    # for i in range(30):
+    #     resp = cur.execute(
+    #                 '''SELECT word, accent_index FROM words WHERE id == ?''',
+    #                 (random.randint(1, 1000000),)
+    #             ).fetchone()
+    #     if resp:
+    #         tests.append(resp)
+
+    tests = [("хата", 1),
+         ("неба", 1),
+         ("дзень", 2),
+         ("ксёндз", 2),
+         ("шчаўе", 2),
+         ("лодка", 1),
+         ("кніжка", 2),
+         ("касьба", 5),
+         ("лічба", 1),
+         ("малацьба", 7),
+         ("цемя", 1),
+         ("здзек", 3),
+         ("збіраць", 4),
+         ("дзверы", 3),
+         ("чацвёрты", 4),
+         ("скінуць", 2),
+         ("дошцы", 1),
+         ("смяешся", 3),
+         ("зжаць", 2),
+         ("сшытак", 2),
+         ("расчасаць", 6),
+         ("нарэшце", 3),
+         ("нарэжце", 3),
+         ("матчын", 1),
+         ("кладцы", 2),
+         ("разводдзе", 4),]
 
     for i, test in enumerate(tests):
         print(f'{i}  {test[0]}:    {' '.join(get_transcription(*test))}')
-
-    """
-    while True: 
-        input_word = input('Увядзіце слова: ')
-        if input_word in ['exit', 'e', 'q', 'quit', 'выход', 'в']:
-            break
-
-        new_word = False
-        word = cur.execute('''SELECT * FROM words WHERE word == ?''',
-                        (input_word,)).fetchall()
-        if len(word) == 0:
-            new_word = True
-            print('Гэтае слова для нас новае.')
-            while True:
-                try:
-                    accent = int(input('Увядзіце нумар ударнай літары: ')) - 1
-                    if accent >= len(input_word) or accent < 0:
-                        print('Літары з такім нумарам тут няма')
-                        continue
-                    if not is_vowel(input_word[accent]):
-                        print('Гэта на галосны гук')
-                        continue
-                    break
-                
-                except ValueError:
-                    print('Гэта не лічба')
-            
-            working_part = input_word[accent:]
-            if accent == len(input_word) - 1:
-                working_part = input_word[accent - 1:]
-            for sound in similar:
-                if sound in working_part:
-                    working_part = working_part.replace(sound, similar[sound])
-            word = (0, input_word, 0, 0, accent, working_part)
-            print(word)
-        else:
-            word = word[0]
-
-        words = cur.execute('''SELECT * FROM words
-                            WHERE working_part == ? AND word != ?''',
-                            (word[5], word[1])).fetchall()
-        words = sorted(words, key=lambda w: alphabet_sort_key(w[1]))
-        for w in words:
-            print(add_accent(w[1], w[4]))
-            posp = cur.execute('''SELECT name FROM parts_of_speech
-                                WHERE id == ?''',
-                                (w[3], )).fetchone()[0]
-            if w[2] == w[0]:
-                initial = 'пач. форма'
-            else:
-                initial = f'ад ' + cur.execute('''SELECT word FROM words
-                                    WHERE id == ?''',
-                                    (w[2],)).fetchone()[0]
-            print(f' ({posp}, {initial})')
-            
-        if len(words) == 0:
-            print('На жаль, мы не ведаем падыходных рыфмаў')
-
-        if new_word:
-            answer = input('Захаваць гэтае слова? ')
-            if answer.lower() in ['да', 'так', 'д', 'т', '+', 'ок',
-                                'ok', 'y', 'yes', '1', 'true']:
-                while True:
-                    try:                    
-                        print('Якая гэта часціна мовы?')
-                        print('назоўнік    -   1')
-                        print('дзеяслоў    -   2')
-                        print('прыметнік   -   3')
-                        print('займеннік   -   4')
-                        print('лічэбнік    -   5')
-                        print('прыслоўе    -   6')
-                        print('інш.        -   7')
-                        posp = int(input())
-                        if posp < 1 or posp > 7:
-                            print('Гэтай лічбы ў спісе не было.')
-                            print('Нічога, у наступны раз атрымаецца (мабыць)')
-                            continue
-                        break
-                    except ValueError:
-                        print('Гэта не лічба')
-
-                ans = input('Гэта пачатковая форма слова? ')
-                is_initial = (ans.lower() in ['да', 'так', 'д', 'т', '+', 'ок',
-                                            'ok', 'y', 'yes', '1', 'true'])
-                if not is_initial:
-                    initial = input('Якая ў яго пачатковая форма? ')
-                    initial_id = cur.execute('''
-                                SELECT * FROM words WHERE word == ?''',
-                                (initial,)).fetchone()
-                    if initial_id is not None:
-                        initial_id = initial_id[0]
-                else:
-                    print('Будзем лічыць, што так')
-                    initial_id = cur.execute('''
-                                SELECT MAX(id) from words''').fetchone()[0]
-                    if initial_id is None:
-                        initial_id = 1
-                    else:
-                        initial_id += 1
-                    initial = word[1]
-                    accent = word[4]
-                
-                working_part = initial[accent:]
-                if accent == len(initial) - 1:
-                    working_part = initial[accent - 1:]
-
-                if is_initial:
-                    cur.execute('''INSERT INTO words(word, initial_id, part_of_speech,
-                                accent_index, working_part)
-                                VALUES(?, ?, ?, ?, ?)''',
-                                (word[1], initial_id, posp, word[4], word[5]))
-                else:
-                    if initial_id is None:
-                        print('Яшчэ штосьці новае...')
-                        while True:
-                            try:
-                                accent = int(input('Куды падае націск у пач. форме? ')) - 1
-                                if accent >= len(initial) or accent < 0:
-                                    print('Літары з такім нумарам тут няма')
-                                    continue
-                                if not is_vowel(initial[accent]):
-                                    print('Гэта на галосны гук')
-                                    continue
-                                break
-                            except ValueError:
-                                print('Гэта не лічба')
-                            
-                        initial_id = cur.execute('''
-                                    SELECT MAX(id) from words''').fetchone()[0]
-                        if initial_id is None:
-                            initial_id = 1
-                        else:
-                            initial_id += 1
-                            
-                        working_part = initial[accent:]
-                        if accent == len(input_word) - 1:
-                            working_part = initial[accent - 1:]
-                        for sound in similar:
-                            if sound in working_part:
-                                working_part = working_part.replace(sound, similar[sound])
-
-                        print((initial_id, initial, initial_id, posp, accent,
-                                working_part))
-                        cur.execute('''INSERT INTO words(word, initial_id,
-                        part_of_speech, accent_index, working_part)
-                        VALUES(?, ?, ?, ?, ?)''',
-                                (initial, initial_id, posp, accent,
-                                working_part))
-                    
-                    cur.execute('''INSERT INTO words(word, initial_id, part_of_speech,
-                        accent_index, working_part)
-                        VALUES(?, ?, ?, ?, ?)''',
-                                (word[1], initial_id, posp, word[4], word[5]))
-                con.commit()
-                print('Слова захавана')
-            else:
-                print('Слова не захавана')
+        for j in range(3):
+            print(f'{get_working_part(*test, mistake=j)}')
         print()
-    """
 
     con.close()
