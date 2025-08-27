@@ -24,7 +24,7 @@ def update_rhymes():
         session['input_word_info'] = {'word': ''}
         return jsonify(rhymes_list=[], word_found=False)
 
-    app.logger.info("Request rhyme: %s", str(input_word_info))
+    app.logger.info("%s Request rhyme: %s", str(request.remote_addr), str(input_word_info))
     rhymes = ryfmach.rhymes_text_list(input_word_info)
     word_found = True
     if rhymes is None:
