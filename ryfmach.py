@@ -461,7 +461,9 @@ def find_rhymes(input_word: str,
                             words[i][2] == words[i - 1][2] and
                             words[i][4] == words[i - 1][4])) and
             filtered_posp[words[i][3] - 1] and (words[i][0] == words[i][2] or not only_initial)):
-                rhymes.append(get_word_dict(words[i]))
+                word_dict = get_word_dict(words[i])
+                if word_dict.get("initial_word") != input_word:
+                    rhymes.append(word_dict)
     
     if len(rhymes) > 1000:
         rhymes = rhymes[:1000]
