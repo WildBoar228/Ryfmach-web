@@ -108,7 +108,7 @@ function process_rhymes_response(data){
         const rhymes_data = data.rhymes_list[i].rhymes_data;
 
         if (rhymes_data.length == 0){
-            precalc_rhymes_html[i] += `<div class="alert alert-info info-text" role="alert">Пу-пу-пу! Рыфмаў абранай трапнасці не знайшлося. Змяніце фільтры або паспрабуйце іншае слова.</div>`;
+            precalc_rhymes_html[i] += `<div class="alert alert-info info-text" role="alert">Пу-пу-пу! Рыфмаў абранай трапнасці не знайшлося. Змяніце фільтры (<i class="fa fa-cog"></i>) або паспрабуйце іншае слова.</div>`;
             precalc_rhymes_count[i] = ` - `;
         }
         else{
