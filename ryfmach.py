@@ -212,10 +212,12 @@ def get_transcription(word, accent):
                     t[-1] = soft_pair(t[-1])
 
     # афрыкаты
-    for i in range(len(t) - 1):
+    i = 0
+    while i < len(t) - 1:
         if t[i] == "д" and t[i + 1] in ["ж", "з", "з'"]:
             t[i] += t[i + 1]
             t.pop(i + 1)
+        i += 1
 
     changed = True
     while (changed):
@@ -349,7 +351,7 @@ def get_working_part(word: str, accent: int, mistake: int = 0):
     # ідэяльная рыфма
     i = 0
     while i < len(t):
-        if i > 0 and (t[i] == t[i - 1] or t[i] in ["дз", "дз'", "дж"] and t[i - 1] in ["д"]):
+        if i > 0 and not is_vowel(t[i]) and (t[i] == t[i - 1] or t[i] in ["дз", "дз'", "дж"] and t[i - 1] in ["д"]):
             t.pop(i - 1)
             continue
 
@@ -411,12 +413,12 @@ def get_working_part(word: str, accent: int, mistake: int = 0):
             
             i += 1
     
-    i = 0
-    while i < len(t):
-        if i > 0 and (t[i] == t[i - 1] or t[i] in ["дз", "дз'", "дж"] and t[i - 1] in ["д"]):
-            t.pop(i - 1)
-            continue
-        i += 1
+        i = 0
+        while i < len(t):
+            if i > 0 and (t[i] == t[i - 1] or t[i] in ["дз", "дз'", "дж"] and t[i - 1] in ["д"]):
+                t.pop(i - 1)
+                continue
+            i += 1
     
     return "".join(t)
 
@@ -425,29 +427,35 @@ def find_rhymes(input_word: str,
                 accent: int,
                 filtered_posp: list[bool] = [True, True, True, True, True, True, True,],
                 only_initial: bool = False,
-                mistake: int = 0):
-    print(get_transcription(input_word, accent))
+                mistake: int = 0,
+                debug_output=True):
+    
+    # print(get_transcription(input_word, accent))
     working_part0 = get_working_part(input_word, accent, 0)
     working_part1 = get_working_part(input_word, accent, 1)
     working_part2 = get_working_part(input_word, accent, 2)
-    print(f'{working_part0} \t {working_part1} \t {working_part2}')
+    # print(f'{working_part0} \t {working_part1} \t {working_part2}')
     try:
         db_lock.acquire(True)
-        if mistake == 0:
+
+        if mistake == -1 or mistake == 0:
             words = cur.execute('''SELECT * FROM words
                                     WHERE working_part0 == ? AND word != ?
                                     ORDER BY word, initial_id, accent_index;''',
                                         (working_part0, input_word)).fetchall()
+            
         elif mistake == 1:
             words = cur.execute('''SELECT * FROM words
                                     WHERE working_part0 != ? AND working_part1 == ? AND word != ?
                                     ORDER BY word, initial_id, accent_index;''',
                                         (working_part0, working_part1, input_word)).fetchall()
+            
         elif mistake == 2:
             words = cur.execute('''SELECT * FROM words
                                     WHERE working_part0 != ? AND working_part1 != ? AND working_part2 == ? AND word != ?
                                     ORDER BY word, initial_id, accent_index;''',
                                         (working_part0, working_part1, working_part2, input_word)).fetchall()
+
     except Exception as exc:
         print(exc)
     finally:
@@ -473,6 +481,22 @@ def find_rhymes(input_word: str,
         # else:
         #     rhymes = only_initial + rhymes[:1000 - len(only_initial)]
         #     rhymes = sorted(rhymes, key=lambda w: (alphabet_sort_key(w[1])))
+    
+    if mistake == -1 and len(rhymes) < 10:
+        print(f'{len(rhymes)}', end='  ')
+
+        for mst in (1, 2):
+            if len(rhymes) < 10:
+                rhymes1 = find_rhymes(input_word, accent, filtered_posp, only_initial, mst)
+                if len(words) + len(rhymes1) > 500:
+                    rhymes1 = rhymes1[len(rhymes) - 500:]
+                
+                rhymes += rhymes1
+                print(f'+{len(rhymes1)}', end='  ')
+
+        rhymes = sorted(rhymes, key=lambda w: (alphabet_sort_key(w["word"])))
+        
+        print('  rhymes found')
     
     return rhymes
 
