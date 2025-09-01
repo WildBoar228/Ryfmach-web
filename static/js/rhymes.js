@@ -9,7 +9,7 @@ var input_word;
 var accent_index = -1;
 var filtered_parts_of_speech = [1, 1, 1, 1, 1, 1, 1];
 var filtered_only_initial = false;
-var search_mistake = 0;
+var search_mistake = -1;
 
 const search_input_rhyme = document.getElementById("search-input-rhyme");
 const search_icon = document.getElementById("search-icon");
