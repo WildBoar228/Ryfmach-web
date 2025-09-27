@@ -72,7 +72,11 @@ function word_data_to_html(word_data, classes_normal="info-text", classes_accent
 
 
 function update_rhymes(word_variant_index){
-    dropdown_choose_word.innerHTML = word_data_to_html(rhymes_response.rhymes_list[word_variant_index].word_variant);
+    dropdown_choose_word.innerHTML = "";
+    if (precalc_rhymes_html.length > 1)
+        dropdown_choose_word.innerHTML = `${word_variant_index + 1}/${precalc_rhymes_html.length} `;
+    dropdown_choose_word.innerHTML +=
+        word_data_to_html(rhymes_response.rhymes_list[word_variant_index].word_variant);
     
     rhymes_list.innerHTML = precalc_rhymes_html[word_variant_index];
     rhymes_count_text.innerHTML = precalc_rhymes_count[word_variant_index];
@@ -100,6 +104,7 @@ function process_rhymes_response(data){
     
     rhymes_block.style.display = "block";
 
+    precalc_rhymes_html = precalc_rhymes_html.slice(0, data.rhymes_list)
     for (i in data.rhymes_list){
         word_data = data.rhymes_list[i].word_variant;
         dropdown_choose_word_menu.innerHTML += `<li><button class="dropdown-item" onclick=update_rhymes(${i})>${word_data_to_html(word_data)}</button></li>`;
