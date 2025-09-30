@@ -178,6 +178,14 @@ function letter_button_onclick(index){
 
 
 function post_rhymes_request(){
+    for (i = 1; i <= 7; ++i){
+        filtered_parts_of_speech[i - 1] = document.getElementById(`check-posp-${i}`).checked;
+    }
+    filtered_only_initial = document.getElementById(`check-only-initial`).checked;
+    search_mistake = parseInt($("#search-mistake-radio :input:radio:checked").val());
+
+    console.log(filtered_parts_of_speech);
+
     input_word = search_input_rhyme.value.toLowerCase();
     input_word = input_word.replaceAll(" ", "");
     
@@ -213,7 +221,7 @@ function post_rhymes_request(){
         contentType: "application/json",
         data: JSON.stringify({
             "word": input_word,
-            "filter_posp": filtered_parts_of_speech,
+            "filtered_posp": filtered_parts_of_speech,
             "only_initial": filtered_only_initial,
             "search_mistake": search_mistake,
         }),
@@ -257,7 +265,7 @@ function post_rhymes_with_manual_accent(){
         data: JSON.stringify({
             "word": input_word,
             "accent": accent_index,
-            "filter_posp": filtered_parts_of_speech,
+            "filtered_posp": filtered_parts_of_speech,
             "only_initial": filtered_only_initial,
             "search_mistake": search_mistake,
         }),
