@@ -441,17 +441,37 @@ def find_rhymes(input_word: str,
     try:
         db_lock.acquire(True)
 
+        enabled_posp_cnt = sum(filtered_posp)
+        posp_filter = " AND ("
+        if (enabled_posp_cnt > len(filtered_posp) / 2):
+            for i in range(len(filtered_posp)):
+                if not filtered_posp[i]:
+                    if (posp_filter[-1] != '('):
+                        posp_filter += " AND "
+                    posp_filter += f"part_of_speech != {i + 1}"
+        else:
+            for i in range(len(filtered_posp)):
+                if filtered_posp[i]:
+                    if (posp_filter[-1] != '('):
+                        posp_filter += " OR "
+                    posp_filter += f"part_of_speech == {i + 1}"
+        posp_filter += ")"
+        if not any(filtered_posp) or all(filtered_posp):
+            posp_filter = ""
+
+        # print(f'posp_filter = "{posp_filter}"')
+
         if mistake == -1 or mistake == 0:
-            words = cur.execute('''SELECT * FROM words
-                                    WHERE working_part0 == ? AND word != ?
+            words = cur.execute(f'''SELECT * FROM words
+                                    WHERE working_part0 == ? AND word != ?{posp_filter}
                                     ORDER BY word, initial_id, accent_index
                                     LIMIT ?;''',
                                         (working_part0, input_word,
                                          min(cnt_limit * 2, MAX_RHYMES_IN_RESP))).fetchall()
             
         elif mistake == 1:
-            words = cur.execute('''SELECT * FROM words
-                                    WHERE working_part0 != ? AND working_part1 == ? AND word != ?
+            words = cur.execute(f'''SELECT * FROM words
+                                    WHERE working_part0 != ? AND working_part1 == ? AND word != ?{posp_filter}
                                     ORDER BY word, initial_id, accent_index
                                     LIMIT ?;''',
                                         (working_part0, working_part1,
@@ -459,8 +479,8 @@ def find_rhymes(input_word: str,
                                          min(cnt_limit * 2, MAX_RHYMES_IN_RESP))).fetchall()
             
         elif mistake == 2:
-            words = cur.execute('''SELECT * FROM words
-                                    WHERE working_part0 != ? AND working_part1 != ? AND working_part2 == ? AND word != ?
+            words = cur.execute(f'''SELECT * FROM words
+                                    WHERE working_part0 != ? AND working_part1 != ? AND working_part2 == ? AND word != ?{posp_filter}
                                     ORDER BY word, initial_id, accent_index
                                     LIMIT ?;''',
                                         (working_part0, working_part1,
@@ -473,6 +493,7 @@ def find_rhymes(input_word: str,
         db_lock.release()
 
     words = sorted(words, key=lambda w: (alphabet_sort_key(w[1])))
+    # print(f'{len(words)} words (at first), last: {words[-1] if len(words) > 0 else '-'}')
 
     rhymes = []
     for i in range(len(words)):
@@ -493,23 +514,25 @@ def find_rhymes(input_word: str,
         #     rhymes = only_initial + rhymes[:MAX_RHYMES_IN_RESP - len(only_initial)]
         #     rhymes = sorted(rhymes, key=lambda w: (alphabet_sort_key(w[1])))
     
-    if mistake == -1 and len(rhymes) < 10:
-        print(f'{len(rhymes)}', end='  ')
+    output_str = f'{mistake}  {input_word} ({accent}):  '
+    if mistake == -1:
+        if len(rhymes) < 10:
+            output_str += f'{len(rhymes)}  '
 
-        for mst in (1, 2):
-            if len(rhymes) < 10:
-                rhymes1 = find_rhymes(input_word, accent, filtered_posp,
-                                      only_initial, mst, cnt_limit=50 - len(rhymes))
-                # if len(words) + len(rhymes1) > 30:
-                #     rhymes1 = rhymes1[len(rhymes) - 30:]
-                
-                rhymes += rhymes1
+            for mst in (1, 2):
+                if len(rhymes) < 10:
+                    rhymes1 = find_rhymes(input_word, accent, filtered_posp,
+                                        only_initial, mst, cnt_limit=50 - len(rhymes))
+                    
+                    rhymes += rhymes1
 
-                print(f'+{len(rhymes1)}', end='  ')
+                    output_str += f'+{len(rhymes1)}  '
 
-        rhymes = sorted(rhymes, key=lambda w: (alphabet_sort_key(w["word"])))
-        
-        print('  rhymes found')
+            rhymes = sorted(rhymes, key=lambda w: (alphabet_sort_key(w["word"])))
+            output_str += '=  '
+
+    output_str += f'{len(rhymes)} rhymes found'
+    print(output_str)
     
     return rhymes
 
