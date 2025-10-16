@@ -10,6 +10,7 @@ var accent_index = -1;
 var filtered_parts_of_speech = [1, 1, 1, 1, 1, 1, 1];
 var filtered_only_initial = false;
 var search_mistake = -1;
+var sort_mode = 0;
 
 const search_input_rhyme = document.getElementById("search-input-rhyme");
 const search_icon = document.getElementById("search-icon");
@@ -183,6 +184,7 @@ function post_rhymes_request(){
     }
     filtered_only_initial = document.getElementById(`check-only-initial`).checked;
     search_mistake = parseInt($("#search-mistake-radio :input:radio:checked").val());
+    sort_mode = parseInt($("#sort-mode-radio :input:radio:checked").val());
 
     console.log(filtered_parts_of_speech);
 
@@ -224,6 +226,7 @@ function post_rhymes_request(){
             "filtered_posp": filtered_parts_of_speech,
             "only_initial": filtered_only_initial,
             "search_mistake": search_mistake,
+            "sort_mode": sort_mode,
         }),
         success: process_rhymes_response,
     });
@@ -268,6 +271,7 @@ function post_rhymes_with_manual_accent(){
             "filtered_posp": filtered_parts_of_speech,
             "only_initial": filtered_only_initial,
             "search_mistake": search_mistake,
+            "sort_mode": sort_mode,
         }),
         success: process_rhymes_response,
     });
@@ -280,6 +284,7 @@ function update_filters(){
     }
     filtered_only_initial = document.getElementById(`check-only-initial`).checked;
     search_mistake = parseInt($("#search-mistake-radio :input:radio:checked").val());
+    sort_mode = parseInt($("#sort-mode-radio :input:radio:checked").val());
 
     new_input = search_input_rhyme.value.toLowerCase().replaceAll(" ", "").replaceAll("и", "і").replaceAll("щ", "ў").replaceAll("ъ", "'");
     if (new_input != input_word){
@@ -305,6 +310,7 @@ function update_filters(){
                 "filtered_posp": filtered_parts_of_speech,
                 "only_initial": filtered_only_initial,
                 "search_mistake": search_mistake,
+                "sort_mode": sort_mode,
             }),
             success: process_rhymes_response,
         });
@@ -321,6 +327,7 @@ function update_filters(){
                 "filtered_posp": filtered_parts_of_speech,
                 "only_initial": filtered_only_initial,
                 "search_mistake": search_mistake,
+                "sort_mode": sort_mode,
             }),
             success: process_rhymes_response,
         });

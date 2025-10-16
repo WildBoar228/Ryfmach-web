@@ -42,19 +42,19 @@ def run_first_iter_replace_cost():
                 # ringing/thud, soft/hard
                 diff = (
                     abs(language.cons_data[s1][1] - language.cons_data[s2][1]) + 
-                    abs(language.cons_data[s1][2] - language.cons_data[s2][2])
-                ) * 10
+                    abs(language.cons_data[s1][2] - language.cons_data[s2][2]) * 2
+                ) * 7
 
                 # if have any common group
                 if language.cons_data[s1][0] == language.cons_data[s2][0]:
-                    diff //= 3
+                    diff /= 2
                 else:
                     diff += 6
 
                 if language.is_whistl(s1) and language.is_whistl(s2):
-                    diff //= 3
+                    diff /= 3
                 if language.is_hiss(s1) and language.is_hiss(s2):
-                    diff //= 3
+                    diff /= 3
                 
                 cost_to_replace[(s1, s2)] = diff
 
@@ -68,8 +68,9 @@ def run_first_iter_replace_cost():
                 cost_to_replace[(v, c)] = 20
                 cost_to_replace[("_" + v + "_", c)] = 40
 
-    pprint(cost_to_replace)
-    print(len(cost_to_replace))
+    if __name__ == "__main__":
+        pprint(cost_to_replace)
+        print(len(cost_to_replace))
 
 
 def get_replace_cost(s1, s2):
@@ -130,8 +131,9 @@ def get_transcript_mapping(s, t, max_shift=2):
     if i == 1 and j == 1:
         mapping.append((i - 1, j - 1))
     
-    # pprint(dp)
-    # print(f"final error: ", dp[n][m])
+    if __name__ == "__main__":
+        pprint(dp)
+        print(f"final error: ", dp[n][m])
     
     return mapping, dp[n][m]
 
@@ -161,44 +163,38 @@ def get_rhyme_quality(word1, accent1, word2, accent2, max_shift=5):
 run_first_iter_replace_cost()
 
 
-input_word = input()
-input_accent = int(input())
+if __name__ == "__main__":
+    # input_word = input()
+    # input_accent = int(input())
 
-rhymes = (
-    ryfmach.find_rhymes(input_word, input_accent, mistake=0, cnt_limit=10, filtered_posp=[1,0,0,0,0,0,0]) +
-    ryfmach.find_rhymes(input_word, input_accent, mistake=1, cnt_limit=10, filtered_posp=[1,0,0,0,0,0,0]) +
-    ryfmach.find_rhymes(input_word, input_accent, mistake=2, cnt_limit=10, filtered_posp=[1,0,0,0,0,0,0])
-)
-print(',  '.join([w["word"] for w in rhymes]))
-rhymes = sorted(
-    rhymes,
-    key=lambda w: get_rhyme_quality(
-        input_word,
-        input_accent,
-        w["word"],
-        w["accent"],
+    # rhymes = (
+    #     ryfmach.find_rhymes(input_word, input_accent, mistake=0, cnt_limit=10, filtered_posp=[1,0,0,0,0,0,0]) +
+    #     ryfmach.find_rhymes(input_word, input_accent, mistake=1, cnt_limit=10, filtered_posp=[1,0,0,0,0,0,0]) +
+    #     ryfmach.find_rhymes(input_word, input_accent, mistake=2, cnt_limit=10, filtered_posp=[1,0,0,0,0,0,0])
+    # )
+    # print(',  '.join([w["word"] for w in rhymes]))
+    # rhymes = sorted(
+    #     rhymes,
+    #     key=lambda w: get_rhyme_quality(
+    #         input_word,
+    #         input_accent,
+    #         w["word"],
+    #         w["accent"],
+    #     )
+    # )
+    # print(',  '.join([w["word"] for w in rhymes]))
+
+
+    print()
+    get_rhyme_sounds_mapping(
+        "горад", 1,
+        "волат", 1,
+        3,
     )
-)
-print(',  '.join([w["word"] for w in rhymes]))
 
-
-print()
-get_rhyme_sounds_mapping(
-    "гора", 1,
-    "мора", 1,
-    3,
-)
-
-print()
-get_rhyme_sounds_mapping(
-    "лебедзь", 1,
-    "дробязь", 2,
-    3,
-)
-
-print()
-get_rhyme_sounds_mapping(
-    "гара", 3,
-    "гора", 1,
-    1,
-)
+    print()
+    get_rhyme_sounds_mapping(
+        "горад", 1,
+        "агораць", 2,
+        3,
+    )

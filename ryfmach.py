@@ -1,6 +1,7 @@
 import sqlite3
 import threading
 from language import *
+import sounds
 
 MAX_RHYMES_IN_RESP = 300
 
@@ -47,10 +48,10 @@ def get_word_data(input_word: str):
     finally:
         db_lock.release()
     
-    words = sorted(words, key=lambda w: (alphabet_sort_key(w[1])))
+    words = sorted(words, key=record_sort_key(alphabet_sort_words_key))
     
     word_variants = []
-        
+    
     for i in range(len(words)):
         if i == 0 or not (words[i][1] == words[i - 1][1] and
                           words[i][2] == words[i - 1][2] and
@@ -140,13 +141,55 @@ def get_working_part(word: str, accent: int, mistake: int = 0):
     return "".join(t)
 
 
+def alphabet_sort_words_key(w, accent=None):
+    global alphabet
+    try:
+        return [alphabet.index(c) if c in alphabet else -1 for c in w]
+    except Exception as exc:
+        print(w, exc)
+
+
+def quality_sort_words_key(compare_with):
+    def quality_with_comparation(w, accent):
+        global alphabet
+        try:
+            return (
+                sounds.get_rhyme_quality(
+                    w, accent,
+                    compare_with["word"], compare_with["accent"]
+                ),
+            )
+        except Exception as exc:
+            print(compare_with, w, exc)
+    return quality_with_comparation
+
+
+def record_sort_key(word_key):
+    def record_key(w_record):
+        return (
+            word_key(w_record[1], w_record[4]),
+            w_record[0] != w_record[2],
+        )
+    return record_key
+
+
+def json_sort_key(word_key):
+    def json_key(w_record):
+        return (
+            word_key(w_record["word"], w_record["accent"]),
+            w_record["word"] != w_record.get("initial_word"),
+        )
+    return json_key
+
+
 def find_rhymes(input_word: str,
                 accent: int,
                 filtered_posp: list[bool] = [True, True, True, True, True, True, True,],
                 only_initial: bool = False,
                 mistake: int = 0,
                 debug_output=True,
-                cnt_limit=MAX_RHYMES_IN_RESP):
+                cnt_limit=MAX_RHYMES_IN_RESP,
+                words_sort_key=alphabet_sort_words_key):
     
     # print(get_transcription(input_word, accent))
     working_part0 = get_working_part(input_word, accent, 0)
@@ -182,7 +225,7 @@ def find_rhymes(input_word: str,
                                     ORDER BY word, initial_id, accent_index
                                     LIMIT ?;''',
                                         (working_part0, input_word,
-                                         min(cnt_limit * 2, MAX_RHYMES_IN_RESP))).fetchall()
+                                         MAX_RHYMES_IN_RESP)).fetchall()
             
         elif mistake == 1:
             words = cur.execute(f'''SELECT * FROM words
@@ -191,7 +234,7 @@ def find_rhymes(input_word: str,
                                     LIMIT ?;''',
                                         (working_part0, working_part1,
                                          input_word,
-                                         min(cnt_limit * 2, MAX_RHYMES_IN_RESP))).fetchall()
+                                         MAX_RHYMES_IN_RESP)).fetchall()
             
         elif mistake == 2:
             words = cur.execute(f'''SELECT * FROM words
@@ -200,14 +243,14 @@ def find_rhymes(input_word: str,
                                     LIMIT ?;''',
                                         (working_part0, working_part1,
                                          working_part2, input_word,
-                                         min(cnt_limit * 2, MAX_RHYMES_IN_RESP))).fetchall()
+                                         MAX_RHYMES_IN_RESP)).fetchall()
 
     except Exception as exc:
         print(exc)
     finally:
         db_lock.release()
 
-    words = sorted(words, key=lambda w: (alphabet_sort_key(w[1])))
+    words = sorted(words, key=record_sort_key(words_sort_key))
     # print(f'{len(words)} words (at first), last: {words[-1] if len(words) > 0 else '-'}')
 
     rhymes = []
@@ -237,17 +280,21 @@ def find_rhymes(input_word: str,
             for mst in (1, 2):
                 if len(rhymes) < 10:
                     rhymes1 = find_rhymes(input_word, accent, filtered_posp,
-                                        only_initial, mst, cnt_limit=50 - len(rhymes))
+                                          only_initial, mst, cnt_limit=cnt_limit // 2)
                     
                     rhymes += rhymes1
 
                     output_str += f'+{len(rhymes1)}  '
 
-            rhymes = sorted(rhymes, key=lambda w: (alphabet_sort_key(w["word"])))
+            rhymes = sorted(rhymes, key=json_sort_key(words_sort_key))
             output_str += '=  '
+        
+        if len(rhymes) > cnt_limit:
+            rhymes = rhymes[:cnt_limit]
 
     output_str += f'{len(rhymes)} rhymes found'
-    print(output_str)
+    if debug_output:
+        print(output_str)
     
     return rhymes
 
@@ -270,12 +317,17 @@ def rhymes_text_list(input_word_info):
 
     rhymes = []
     for i in range(len(input_word_data)):
+        sort_func = (
+            alphabet_sort_words_key if input_word_info["sort_mode"] == 0
+            else quality_sort_words_key(input_word_data[i])
+        )
         rhymes.append({"word_variant": input_word_data[i],
                        "rhymes_data": find_rhymes(input_word_data[i]["word"],
                                                   input_word_data[i]["accent"],
                                                   filtered_posp=filtered_posp,
                                                   only_initial=only_initial,
-                                                  mistake=mistake)})
+                                                  mistake=mistake,
+                                                  words_sort_key=sort_func)})
     
     return rhymes
 

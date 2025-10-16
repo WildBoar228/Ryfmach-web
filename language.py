@@ -285,11 +285,3 @@ def is_vowel(letter: str):
 
 def add_accent(word: str, accent: int):
     return word[:accent] + '<span class="accent-vowel">' + word[accent] + '</span>' + word[accent + 1:]
-
-
-def alphabet_sort_key(w):
-    global alphabet
-    try:
-        return [alphabet.index(c) if c in alphabet else -1 for c in w]
-    except Exception as exc:
-        print(w, exc)
