@@ -1,1 +1,7 @@
 db/
+log_archive/
+*.md
+.htaccess
+edit_db.py
+data/
+tests.py
