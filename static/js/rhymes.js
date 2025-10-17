@@ -10,7 +10,7 @@ var accent_index = -1;
 var filtered_parts_of_speech = [1, 1, 1, 1, 1, 1, 1];
 var filtered_only_initial = false;
 var search_mistake = -1;
-var sort_mode = 0;
+var sort_mode = "quality";
 
 const search_input_rhyme = document.getElementById("search-input-rhyme");
 const search_icon = document.getElementById("search-icon");
@@ -184,7 +184,7 @@ function post_rhymes_request(){
     }
     filtered_only_initial = document.getElementById(`check-only-initial`).checked;
     search_mistake = parseInt($("#search-mistake-radio :input:radio:checked").val());
-    sort_mode = parseInt($("#sort-mode-radio :input:radio:checked").val());
+    sort_mode = $("#sort-mode-radio :input:radio:checked").val();
 
     console.log(filtered_parts_of_speech);
 
@@ -284,7 +284,7 @@ function update_filters(){
     }
     filtered_only_initial = document.getElementById(`check-only-initial`).checked;
     search_mistake = parseInt($("#search-mistake-radio :input:radio:checked").val());
-    sort_mode = parseInt($("#sort-mode-radio :input:radio:checked").val());
+    sort_mode = $("#sort-mode-radio :input:radio:checked").val();
 
     new_input = search_input_rhyme.value.toLowerCase().replaceAll(" ", "").replaceAll("и", "і").replaceAll("щ", "ў").replaceAll("ъ", "'");
     if (new_input != input_word){

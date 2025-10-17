@@ -175,6 +175,16 @@ def hiss_pair(sound):
             return "дж"
         if sound == "ц" or sound == "ц'":
             return "ч"
+        
+
+def accent_pair(sound):
+    if sound in vowel_list:
+        return "_" + sound + "_"
+
+
+def non_accent_pair(sound):
+    if len(sound) >= 3 and sound[0] == sound[-1] == "_":
+        return sound[1:-1] if sound[1:-1] in vowel_list else None
 
 
 def get_transcription(word, accent):

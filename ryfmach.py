@@ -113,7 +113,7 @@ def get_working_part(word: str, accent: int, mistake: int = 0):
             
             i += 1
     
-    # слабая рыфма
+    # сярэдняя рыфма
     if mistake >= 2:
         i = 0
         while i < len(t):
@@ -138,6 +138,23 @@ def get_working_part(word: str, accent: int, mistake: int = 0):
                 continue
             i += 1
     
+    # слабая рыфма
+    if mistake >= 3:
+        i = 0
+        while i < len(t):
+            if is_ring(t[i]):
+                t[i] = "м"
+            elif is_thud(t[i]):
+                t[i] = "п"
+            elif t[i] in vowel_list:
+                t[i] = "ы"
+            elif non_accent_pair(t[i]) in vowel_list:
+                t[i] = "_ы_"
+            else:
+                t.pop(i)
+                i -= 1
+            i += 1
+    
     return "".join(t)
 
 
@@ -156,8 +173,10 @@ def quality_sort_words_key(compare_with):
             return (
                 sounds.get_rhyme_quality(
                     w, accent,
-                    compare_with["word"], compare_with["accent"]
+                    compare_with["word"], compare_with["accent"],
+                    use_prev_sound=False
                 ),
+                alphabet_sort_words_key(w, accent),
             )
         except Exception as exc:
             print(compare_with, w, exc)
@@ -217,11 +236,13 @@ def find_rhymes(input_word: str,
         if not any(filtered_posp) or all(filtered_posp):
             posp_filter = ""
 
-        # print(f'posp_filter = "{posp_filter}"')
+        is_initial_filter = " AND id == initial_id" if only_initial else ""
 
         if mistake == -1 or mistake == 0:
             words = cur.execute(f'''SELECT * FROM words
-                                    WHERE working_part0 == ? AND word != ?{posp_filter}
+                                    WHERE working_part0 == ? AND word != ?
+                                    {posp_filter}
+                                    {is_initial_filter}
                                     ORDER BY word, initial_id, accent_index
                                     LIMIT ?;''',
                                         (working_part0, input_word,
@@ -229,7 +250,9 @@ def find_rhymes(input_word: str,
             
         elif mistake == 1:
             words = cur.execute(f'''SELECT * FROM words
-                                    WHERE working_part0 != ? AND working_part1 == ? AND word != ?{posp_filter}
+                                    WHERE working_part0 != ? AND working_part1 == ? AND word != ?
+                                    {posp_filter}
+                                    {is_initial_filter}
                                     ORDER BY word, initial_id, accent_index
                                     LIMIT ?;''',
                                         (working_part0, working_part1,
@@ -238,7 +261,9 @@ def find_rhymes(input_word: str,
             
         elif mistake == 2:
             words = cur.execute(f'''SELECT * FROM words
-                                    WHERE working_part0 != ? AND working_part1 != ? AND working_part2 == ? AND word != ?{posp_filter}
+                                    WHERE working_part0 != ? AND working_part1 != ? AND working_part2 == ? AND word != ?
+                                    {posp_filter}
+                                    {is_initial_filter}
                                     ORDER BY word, initial_id, accent_index
                                     LIMIT ?;''',
                                         (working_part0, working_part1,
@@ -255,27 +280,32 @@ def find_rhymes(input_word: str,
 
     rhymes = []
     for i in range(len(words)):
-        if ((i == 0 or not (words[i][1] == words[i - 1][1] and
-                            words[i][2] == words[i - 1][2] and
-                            words[i][4] == words[i - 1][4])) and
-            filtered_posp[words[i][3] - 1] and (words[i][0] == words[i][2] or not only_initial)):
-                word_dict = get_word_dict(words[i])
-                if word_dict.get("initial_word") != input_word:
-                    rhymes.append(word_dict)
+        word_dict = get_word_dict(words[i])
+        if word_dict.get("initial_word") != input_word:
+            rhymes.append(word_dict)
     
     if len(rhymes) > cnt_limit:
         rhymes = rhymes[:cnt_limit]
-        # only_initial = list(filter(lambda w: w["is_initial"] == True, rhymes))
-        # if len(only_initial) > MAX_RHYMES_IN_RESP:
-        #     rhymes = only_initial[:MAX_RHYMES_IN_RESP]
-        # else:
-        #     rhymes = only_initial + rhymes[:MAX_RHYMES_IN_RESP - len(only_initial)]
-        #     rhymes = sorted(rhymes, key=lambda w: (alphabet_sort_key(w[1])))
+    
+    used_initial = set()
+    k = 0
+    for i in range(len(rhymes)):
+        if rhymes[i].get("initial_word"):
+            used_key = (rhymes[i]["initial_word"], rhymes[i]["initial_accent"])
+        else:
+            used_key = (rhymes[i]["word"], rhymes[i]["accent"])
+            
+        if used_key not in used_initial:
+            used_initial.add(used_key)
+            rhymes[k] = rhymes[i]
+            k += 1
+    rhymes = rhymes[:k]
     
     output_str = f'{mistake}  {input_word} ({accent}):  '
     if mistake == -1:
         if len(rhymes) < 10:
             output_str += f'{len(rhymes)}  '
+            old_size = len(rhymes)
 
             for mst in (1, 2):
                 if len(rhymes) < 10:
@@ -286,11 +316,25 @@ def find_rhymes(input_word: str,
 
                     output_str += f'+{len(rhymes1)}  '
 
-            rhymes = sorted(rhymes, key=json_sort_key(words_sort_key))
             output_str += '=  '
-        
-        if len(rhymes) > cnt_limit:
-            rhymes = rhymes[:cnt_limit]
+    
+            k = old_size
+            for i in range(k, len(rhymes)):
+                if rhymes[i]["is_initial"]:
+                    used_key = (rhymes[i]["word"], rhymes[i]["accent"])
+                else:
+                    used_key = (rhymes[i]["initial_word"], rhymes[i]["initial_accent"])
+                    
+                if used_key not in used_initial:
+                    used_initial.add(used_key)
+                    rhymes[k] = rhymes[i]
+                    k += 1
+            rhymes = rhymes[:k]
+            
+            rhymes = sorted(rhymes, key=json_sort_key(words_sort_key))
+    
+    if len(rhymes) > cnt_limit:
+        rhymes = rhymes[:cnt_limit]
 
     output_str += f'{len(rhymes)} rhymes found'
     if debug_output:
@@ -317,10 +361,11 @@ def rhymes_text_list(input_word_info):
 
     rhymes = []
     for i in range(len(input_word_data)):
-        sort_func = (
-            alphabet_sort_words_key if input_word_info["sort_mode"] == 0
-            else quality_sort_words_key(input_word_data[i])
-        )
+        if input_word_info["sort_mode"] == "alphabet":
+            sort_func = alphabet_sort_words_key
+        elif input_word_info["sort_mode"] == "quality":
+            sort_func = quality_sort_words_key(input_word_data[i])
+
         rhymes.append({"word_variant": input_word_data[i],
                        "rhymes_data": find_rhymes(input_word_data[i]["word"],
                                                   input_word_data[i]["accent"],

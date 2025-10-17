@@ -22,6 +22,11 @@ def run_first_iter_replace_cost():
                 cost_to_replace[("_" + s1 + "_", s1)] = 20
                 cost_to_replace[("_" + s1 + "_", "_" + s1 + "_")] = 0
                 break
+            elif s1 + ";" + s2 in ["і;ы", "ы;і"]:
+                cost_to_replace[(s1, s2)] = 0
+                cost_to_replace[("_" + s1 + "_", s2)] = 0
+                cost_to_replace[(s1, "_" + s2 + "_")] = 0
+                cost_to_replace[("_" + s1 + "_", "_" + s2 + "_")] = 0
             else:
                 cost_to_replace[(s1, s2)] = 1
                 cost_to_replace[("_" + s1 + "_", s2)] = 30
@@ -138,26 +143,24 @@ def get_transcript_mapping(s, t, max_shift=2):
     return mapping, dp[n][m]
 
 
-def get_rhyme_sounds_mapping(word1, accent1, word2, accent2, max_shift=5):
+def get_rhyme_sounds_mapping(word1, accent1, word2, accent2, max_shift=5, use_prev_sound=True):
     tr1 = language.get_transcription(word1, accent1)
     tr2 = language.get_transcription(word2, accent2)
-    cut_tr1 = tr1[language.get_accent_in_transcription(tr1):]
-    cut_tr2 = tr2[language.get_accent_in_transcription(tr2):]
-    pairs, err = get_transcript_mapping(cut_tr1, cut_tr2, max_shift)
-    pairs = [(cut_tr1[p[0]], cut_tr2[p[1]]) for p in pairs]
-    # pprint(pairs)
-    return pairs, err
-
-
-def get_rhyme_quality(word1, accent1, word2, accent2, max_shift=5):
-    tr1 = language.get_transcription(word1, accent1)
-    tr2 = language.get_transcription(word2, accent2)
-    cut_index1 = max(0, language.get_accent_in_transcription(tr1) - 1)
-    cut_index2 = max(0, language.get_accent_in_transcription(tr2) - 1)
+    cut_index1 = language.get_accent_in_transcription(tr1)
+    cut_index2 = language.get_accent_in_transcription(tr2)
+    if use_prev_sound:
+        cut_index1 = max(0, cut_index1 - 1)
+        cut_index2 = max(0, cut_index2 - 2)
+    
     cut_tr1 = tr1[cut_index1:]
     cut_tr2 = tr2[cut_index2:]
     pairs, err = get_transcript_mapping(cut_tr1, cut_tr2, max_shift)
-    return err
+    return pairs, err
+
+
+def get_rhyme_quality(word1, accent1, word2, accent2, max_shift=5, use_prev_sound=False):
+    return get_rhyme_sounds_mapping(word1, accent1, word2, accent2,
+                                    max_shift=max_shift, use_prev_sound=use_prev_sound)
 
 
 run_first_iter_replace_cost()
@@ -186,15 +189,13 @@ if __name__ == "__main__":
 
 
     print()
-    get_rhyme_sounds_mapping(
-        "горад", 1,
-        "волат", 1,
-        3,
+    get_rhyme_quality(
+        "прішлыя", 2,
+        "прышлая", 2
     )
 
     print()
-    get_rhyme_sounds_mapping(
-        "горад", 1,
-        "агораць", 2,
-        3,
+    get_rhyme_quality(
+        "прішлыя", 2,
+        "авантурыстычная", 10
     )
