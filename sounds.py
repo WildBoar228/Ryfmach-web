@@ -10,13 +10,13 @@ cost_to_replace = {
 
 def run_first_iter_replace_cost():
     # delete vowel
-    for s in language.vowel_list:
+    for s in language.vowel_sound_list:
         cost_to_replace[("_" + s + "_", "")] = 30
         cost_to_replace[(s, "")] = 10
         
     # replace vowel with vowel
-    for s1 in language.vowel_list:
-        for s2 in language.vowel_list:
+    for s1 in language.vowel_sound_list:
+        for s2 in language.vowel_sound_list:
             if s1 == s2:
                 cost_to_replace[(s1, s1)] = 0
                 cost_to_replace[("_" + s1 + "_", s1)] = 20
@@ -34,12 +34,12 @@ def run_first_iter_replace_cost():
                 cost_to_replace[("_" + s1 + "_", "_" + s2 + "_")] = 10
             
     # delete consonant
-    for s in language.cons_list:
+    for s in language.cons_sound_list:
         cost_to_replace[(s, "")] = 2
 
     # replace consonant with consonant
-    for s1 in language.cons_list:
-        for s2 in language.cons_list:
+    for s1 in language.cons_sound_list:
+        for s2 in language.cons_sound_list:
             if s1 == s2:
                 cost_to_replace[(s1, s1)] = 0
                 break
@@ -64,8 +64,8 @@ def run_first_iter_replace_cost():
                 cost_to_replace[(s1, s2)] = diff
 
     # replace vowel with consonant
-    for v in language.vowel_list:
-        for c in language.cons_list:
+    for v in language.vowel_sound_list:
+        for c in language.cons_sound_list:
             if language.is_ring(c):
                 cost_to_replace[(v, c)] = 15
                 cost_to_replace[("_" + v + "_", c)] = 30
@@ -155,12 +155,14 @@ def get_rhyme_sounds_mapping(word1, accent1, word2, accent2, max_shift=5, use_pr
     cut_tr1 = tr1[cut_index1:]
     cut_tr2 = tr2[cut_index2:]
     pairs, err = get_transcript_mapping(cut_tr1, cut_tr2, max_shift)
+    if __name__ == "__main__":
+        print(f"pairs: {pairs}")
     return pairs, err
 
 
 def get_rhyme_quality(word1, accent1, word2, accent2, max_shift=5, use_prev_sound=False):
     return get_rhyme_sounds_mapping(word1, accent1, word2, accent2,
-                                    max_shift=max_shift, use_prev_sound=use_prev_sound)
+                                    max_shift=max_shift, use_prev_sound=use_prev_sound)[1]
 
 
 run_first_iter_replace_cost()
@@ -190,12 +192,12 @@ if __name__ == "__main__":
 
     print()
     get_rhyme_quality(
-        "прішлыя", 2,
-        "прышлая", 2
+        "доктар", 1,
+        "токар", 1
     )
 
     print()
     get_rhyme_quality(
-        "прішлыя", 2,
-        "авантурыстычная", 10
+        "доктар", 1,
+        "абармотам", 5
     )

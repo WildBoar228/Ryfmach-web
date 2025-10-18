@@ -2,8 +2,12 @@ import sqlite3
 import threading
 from language import *
 import sounds
+import hashlib
+from pprint import pprint
 
-MAX_RHYMES_IN_RESP = 300
+
+MAX_RHYMES_IN_RESP = 500
+MAX_RHYME_MISTAKE = 3
 
 
 def get_word_dict(w):
@@ -62,6 +66,8 @@ def get_word_data(input_word: str):
 
 
 def get_working_part(word: str, accent: int, mistake: int = 0):
+    if mistake < 0:
+        mistake = 0
     t = get_transcription(word, accent)
 
     acc_sound = 0
@@ -69,7 +75,7 @@ def get_working_part(word: str, accent: int, mistake: int = 0):
     # ідэяльная рыфма
     i = 0
     while i < len(t):
-        if i > 0 and not is_vowel(t[i]) and (t[i] == t[i - 1] or t[i] in ["дз", "дз'", "дж"] and t[i - 1] in ["д"]):
+        if i > 0 and not is_vowel_sound(t[i]) and (t[i] == t[i - 1] or t[i] in ["дз", "дз'", "дж"] and t[i - 1] in ["д"]):
             t.pop(i - 1)
             continue
 
@@ -88,28 +94,19 @@ def get_working_part(word: str, accent: int, mistake: int = 0):
     # добрая рыфма
     if mistake >= 1:
         i = 0
-        while i < len(t):
-            if i > 0 and is_soft(t[i - 1]):
-                if t[i] == "э":
-                    t[i] = "і"
-                elif t[i] == "а":
-                    t[i] = "і"
-                elif t[i] == "у":
-                    t[i] = "і"
-            elif t[i] == "э":
-                t[i] = "ы"
-            elif t[i] == "а":
-                t[i] = "ы"
-            elif t[i] == "у":
-                t[i] = "ы"
+        while i < len(t):            
+            if is_vowel_sound(t[i]):
+                if non_accent_pair(t[i]) is None:
+                    t[i] = "ы"
 
-            if i > 0 and i < len(t) - 1 and is_consonant_sound(t[i]):
-                if is_ring(t[i]) and thud_pair(t[i]):
-                    t[i] = thud_pair(t[i])
-            
-            if is_consonant_sound(t[i]) and (i == len(t) - 1 or not is_vowel(t[i + 1])):
-                if is_soft(t[i]) and hard_pair(t[i]):
-                    t[i] = hard_pair(t[i])
+            if is_consonant_sound(t[i]):
+                if i > 0 and i < len(t) - 1:
+                    if is_ring(t[i]) and thud_pair(t[i]):
+                        t[i] = thud_pair(t[i])
+                
+                if (i == len(t) - 1 or not is_vowel_sound(t[i + 1])):
+                    if is_soft(t[i]) and hard_pair(t[i]):
+                        t[i] = hard_pair(t[i])
             
             i += 1
     
@@ -142,20 +139,40 @@ def get_working_part(word: str, accent: int, mistake: int = 0):
     if mistake >= 3:
         i = 0
         while i < len(t):
-            if is_ring(t[i]):
-                t[i] = "м"
-            elif is_thud(t[i]):
-                t[i] = "п"
-            elif t[i] in vowel_list:
-                t[i] = "ы"
-            elif non_accent_pair(t[i]) in vowel_list:
-                t[i] = "_ы_"
-            else:
-                t.pop(i)
-                i -= 1
+            if is_consonant_sound(t[i]):
+                if i == len(t) - 1 or is_vowel_sound(t[i + 1]):
+                    if is_sonor(t[i]):
+                        t[i] = "л"
+                    elif is_hiss(t[i]):
+                        t[i] = "ш"
+                    elif is_whistl(t[i]):
+                        if i == len(t) - 1:
+                            t[i] = "с"
+                        else:
+                            t[i] = "ш"
+                    elif is_ring(t[i]):
+                        t[i] = "в"
+                    elif is_thud(t[i]):
+                        t[i] = "ф"
+                else:
+                    t.pop(i)
+                    i -= 1
+
+            i += 1
+    
+        i = 0
+        while i < len(t):
+            if i > 0 and t[i] == t[i - 1]:
+                t.pop(i - 1)
+                continue
             i += 1
     
     return "".join(t)
+
+
+def get_sound_hash(word: str, accent: int, mistake: int = 0):
+    sound_str = get_working_part(word, accent, mistake)
+    return int(hashlib.sha1(sound_str.encode('utf-8')).hexdigest(), 16) % 12345678901234277
 
 
 def alphabet_sort_words_key(w, accent=None):
@@ -210,11 +227,13 @@ def find_rhymes(input_word: str,
                 cnt_limit=MAX_RHYMES_IN_RESP,
                 words_sort_key=alphabet_sort_words_key):
     
-    # print(get_transcription(input_word, accent))
-    working_part0 = get_working_part(input_word, accent, 0)
-    working_part1 = get_working_part(input_word, accent, 1)
-    working_part2 = get_working_part(input_word, accent, 2)
-    # print(f'{working_part0} \t {working_part1} \t {working_part2}')
+    working_parts = [get_working_part(input_word, accent, i)
+                     for i in range(0, max(0, mistake) + 1)]
+    # print(working_parts)
+    
+    sound_hashes = [get_sound_hash(input_word, accent, i)
+                    for i in range(0, max(0, mistake) + 1)]
+
     try:
         db_lock.acquire(True)
 
@@ -238,45 +257,35 @@ def find_rhymes(input_word: str,
 
         is_initial_filter = " AND id == initial_id" if only_initial else ""
 
-        if mistake == -1 or mistake == 0:
-            words = cur.execute(f'''SELECT * FROM words
-                                    WHERE working_part0 == ? AND word != ?
-                                    {posp_filter}
-                                    {is_initial_filter}
-                                    ORDER BY word, initial_id, accent_index
-                                    LIMIT ?;''',
-                                        (working_part0, input_word,
-                                         MAX_RHYMES_IN_RESP)).fetchall()
-            
-        elif mistake == 1:
-            words = cur.execute(f'''SELECT * FROM words
-                                    WHERE working_part0 != ? AND working_part1 == ? AND word != ?
-                                    {posp_filter}
-                                    {is_initial_filter}
-                                    ORDER BY word, initial_id, accent_index
-                                    LIMIT ?;''',
-                                        (working_part0, working_part1,
-                                         input_word,
-                                         MAX_RHYMES_IN_RESP)).fetchall()
-            
-        elif mistake == 2:
-            words = cur.execute(f'''SELECT * FROM words
-                                    WHERE working_part0 != ? AND working_part1 != ? AND working_part2 == ? AND word != ?
-                                    {posp_filter}
-                                    {is_initial_filter}
-                                    ORDER BY word, initial_id, accent_index
-                                    LIMIT ?;''',
-                                        (working_part0, working_part1,
-                                         working_part2, input_word,
-                                         MAX_RHYMES_IN_RESP)).fetchall()
+        sound_hash_filter = ""
+        for i in range(mistake):
+            sound_hash_filter += f"sound_hash{i} != ? AND "
+        sound_hash_filter += f"sound_hash{max(0, mistake)} == ?"
+        
+        words = cur.execute(f'''SELECT * FROM words
+                                WHERE {sound_hash_filter} AND word != ?
+                                {posp_filter}
+                                {is_initial_filter}
+                                ORDER BY word, initial_id, accent_index
+                                LIMIT ?;''',
+                                (*sound_hashes, input_word, MAX_RHYMES_IN_RESP)
+        ).fetchall()
 
     except Exception as exc:
-        print(exc)
+        print("ERROR query: ", exc)
     finally:
         db_lock.release()
 
+    words = list(filter(lambda r:
+                        get_working_part(r[1], r[4], mistake) ==
+                            working_parts[-1],
+                        words))
+
     words = sorted(words, key=record_sort_key(words_sort_key))
     # print(f'{len(words)} words (at first), last: {words[-1] if len(words) > 0 else '-'}')
+
+    # with open("output.txt", "w", encoding="utf-8") as file:
+    #     file.write(str(words))
 
     rhymes = []
     for i in range(len(words)):
@@ -305,31 +314,32 @@ def find_rhymes(input_word: str,
     if mistake == -1:
         if len(rhymes) < 10:
             output_str += f'{len(rhymes)}  '
-            old_size = len(rhymes)
 
-            for mst in (1, 2):
+            for mst in range(1, MAX_RHYME_MISTAKE + 1):
                 if len(rhymes) < 10:
+                    old_size = len(rhymes)
                     rhymes1 = find_rhymes(input_word, accent, filtered_posp,
-                                          only_initial, mst, cnt_limit=cnt_limit // 2)
+                                          only_initial, mst, cnt_limit=cnt_limit // 2,
+                                          words_sort_key=words_sort_key)
                     
                     rhymes += rhymes1
+    
+                    k = old_size
+                    for i in range(k, len(rhymes)):
+                        if rhymes[i]["is_initial"]:
+                            used_key = (rhymes[i]["word"], rhymes[i]["accent"])
+                        else:
+                            used_key = (rhymes[i]["initial_word"], rhymes[i]["initial_accent"])
+                            
+                        if used_key not in used_initial:
+                            used_initial.add(used_key)
+                            rhymes[k] = rhymes[i]
+                            k += 1
+                    rhymes = rhymes[:k]
 
                     output_str += f'+{len(rhymes1)}  '
 
             output_str += '=  '
-    
-            k = old_size
-            for i in range(k, len(rhymes)):
-                if rhymes[i]["is_initial"]:
-                    used_key = (rhymes[i]["word"], rhymes[i]["accent"])
-                else:
-                    used_key = (rhymes[i]["initial_word"], rhymes[i]["initial_accent"])
-                    
-                if used_key not in used_initial:
-                    used_initial.add(used_key)
-                    rhymes[k] = rhymes[i]
-                    k += 1
-            rhymes = rhymes[:k]
             
             rhymes = sorted(rhymes, key=json_sort_key(words_sort_key))
     
@@ -377,7 +387,7 @@ def rhymes_text_list(input_word_info):
     return rhymes
 
 
-con = sqlite3.connect('db/Slounik2.db', check_same_thread=False)
+con = sqlite3.connect('db/Slounik3.db', check_same_thread=False)
 cur = con.cursor()
 
 db_lock = threading.Lock()
@@ -422,12 +432,16 @@ if __name__ == "__main__":
          ("кладцы", 2),
          ("разводдзе", 4),
          ("ерась", 0),
-         ("верас", 1),]
+         ("верас", 1),
+         ("роспач", 1),
+         ("пробашч", 2),
+         ("бусел", 1),
+         ("вузел", 1),]
 
     for i, test in enumerate(tests):
         print(f'{i}  {test[0]}:    {' '.join(get_transcription(*test))}')
-        for j in range(3):
-            print(f'{get_working_part(*test, mistake=j)}')
+        for j in range(4):
+            print(f'{get_working_part(*test, mistake=j)} {get_sound_hash(*test, mistake=j)}')
         print()
 
     con.close()

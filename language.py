@@ -102,8 +102,8 @@ cons_data =  {'б': (0, 0, 0), "б'": (0, 0, 1),
 
                'ў': (15, 0, 0)}
 
-vowel_list = ["а","о","у","і","ы","э"]
-cons_list = list(cons_data)
+vowel_sound_list = ["а","о","у","і","ы","э"]
+cons_sound_list = list(cons_data)
 
 sonor = [1, 8, 9, 10, 11, 12, 15]
 
@@ -178,13 +178,13 @@ def hiss_pair(sound):
         
 
 def accent_pair(sound):
-    if sound in vowel_list:
+    if sound in vowel_sound_list:
         return "_" + sound + "_"
 
 
 def non_accent_pair(sound):
     if len(sound) >= 3 and sound[0] == sound[-1] == "_":
-        return sound[1:-1] if sound[1:-1] in vowel_list else None
+        return sound[1:-1] if sound[1:-1] in vowel_sound_list else None
 
 
 def get_transcription(word, accent):
@@ -274,7 +274,7 @@ def get_transcription(word, accent):
 def get_accent_in_transcription(tr):
     for i in range(len(tr)):
         if (len(tr[i]) == 3 and tr[i][0] == '_' and
-            tr[i][1] in vowel_list and tr[i][2] == '_'):
+            tr[i][1] in vowel_sound_list and tr[i][2] == '_'):
             return i
     return -1
 
@@ -290,8 +290,11 @@ def is_belarusian(word: str):
             return False
     return True
 
-def is_vowel(letter: str):
+def is_vowel_letter(letter: str):
     return letter in vowels
+
+def is_vowel_sound(sound: str):
+    return sound in vowel_sound_list or non_accent_pair(sound) in vowel_sound_list
 
 def add_accent(word: str, accent: int):
     return word[:accent] + '<span class="accent-vowel">' + word[accent] + '</span>' + word[accent + 1:]
