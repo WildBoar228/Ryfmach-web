@@ -3,6 +3,10 @@ vowels = "аоуыэяёюіе"
 consonants = "бвгджзйклмнпрстўфхцчш"
 softening_vowels = "яёюіе"
 
+alpha_index = {}
+for i, c in enumerate(alphabet):
+    alpha_index[c] = i
+
 iotation = {"я": "а", "ё": "о", "ю": "у", "е": "э",}
 
 # [x][..][..] - группа звуков
@@ -298,3 +302,6 @@ def is_vowel_sound(sound: str):
 
 def add_accent(word: str, accent: int):
     return word[:accent] + '<span class="accent-vowel">' + word[accent] + '</span>' + word[accent + 1:]
+
+def get_alpha_index(c):
+    return alpha_index.get(c, -1)

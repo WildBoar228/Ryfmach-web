@@ -4,6 +4,7 @@ import ryfmach
 from pprint import pprint
 import logging
 import os
+import time
 
 app = Flask(__name__, template_folder='static/templates')
 app.config['SECRET_KEY'] = 'garikgoyda_secret_key'
@@ -24,6 +25,7 @@ def update_rhymes():
         session['input_word_info'] = {'word': ''}
         return jsonify(rhymes_list=[], word_found=False)
 
+    start_time = time.time()
     app.logger.info("%s Request rhyme: %s", str(request.remote_addr), str(input_word_info))
     rhymes = ryfmach.rhymes_text_list(input_word_info)
     word_found = True
@@ -31,6 +33,8 @@ def update_rhymes():
         rhymes = []
         word_found = False
 
+    app.logger.info("%s Response time: %d ms", str(request.remote_addr),
+                    (time.time() - start_time) * 1000)
     session['input_word_info'] = input_word_info
     return jsonify(rhymes_list=rhymes, word_found=word_found)
 

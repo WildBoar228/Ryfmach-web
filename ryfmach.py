@@ -6,7 +6,7 @@ import hashlib
 from pprint import pprint
 
 
-MAX_RHYMES_IN_RESP = 500
+MAX_RHYMES_IN_RESP = 2000
 MAX_RHYME_MISTAKE = 3
 
 
@@ -41,14 +41,45 @@ def get_word_dict(w):
     return word_data
 
 
-def get_word_data(input_word: str):
+def get_word_data(input_word: str, fix_similar_letters: bool = False):
     try:
         db_lock.acquire(True)
-        words = cur.execute('''SELECT * FROM words WHERE word == ?
-                                ORDER BY word, initial_id, accent_index;''',
-                        (input_word,)).fetchall()
+        words = []
+        
+        if fix_similar_letters:
+            replace_letters = {"у": "ў", "ў": "у", "е": "ё", "ё": "е"}
+
+            word_template = input_word
+            for letter in replace_letters:
+                word_template = word_template.replace(letter, "_")
+            
+            if not (0 < word_template.count('_') <= 5):
+                fix_similar_letters = False
+            else:
+                print(f"fix letters: {word_template}")
+                
+                match = cur.execute('''SELECT * FROM words WHERE word LIKE ?
+                                    ORDER BY word, initial_id, accent_index;''',
+                                    (word_template,)).fetchall()
+                
+                for i, rec in enumerate(match):
+                    is_same_word = True
+                    for j in range(len(input_word)):
+                        if (word_template[j] == '_' and
+                            rec[1][j] != input_word[j] and
+                            rec[1][j] != replace_letters.get(input_word[j])):
+                                is_same_word = False
+                                break
+                    if is_same_word:
+                        words.append(rec)
+        
+        if not fix_similar_letters:
+            words = cur.execute('''SELECT * FROM words WHERE word == ?
+                                    ORDER BY word, initial_id, accent_index;''',
+                                (input_word,)).fetchall()
+
     except Exception as exc:
-        print(exc)
+        print("ERROR get_word_data: ", exc)
     finally:
         db_lock.release()
     
@@ -178,7 +209,7 @@ def get_sound_hash(word: str, accent: int, mistake: int = 0):
 def alphabet_sort_words_key(w, accent=None):
     global alphabet
     try:
-        return [alphabet.index(c) if c in alphabet else -1 for c in w]
+        return [get_alpha_index(c) for c in w]
     except Exception as exc:
         print(w, exc)
 
@@ -190,8 +221,7 @@ def quality_sort_words_key(compare_with):
             return (
                 sounds.get_rhyme_quality(
                     w, accent,
-                    compare_with["word"], compare_with["accent"],
-                    use_prev_sound=False
+                    compare_with["word"], compare_with["accent"]
                 ),
                 alphabet_sort_words_key(w, accent),
             )
@@ -224,7 +254,7 @@ def find_rhymes(input_word: str,
                 only_initial: bool = False,
                 mistake: int = 0,
                 debug_output=True,
-                cnt_limit=MAX_RHYMES_IN_RESP,
+                cnt_limit=300,
                 words_sort_key=alphabet_sort_words_key):
     
     working_parts = [get_working_part(input_word, accent, i)
@@ -361,7 +391,8 @@ def rhymes_text_list(input_word_info):
     if not is_belarusian(input_word_info["word"]) or len(input_word_info["word"]) > 40:
         return []
     if input_word_info.get("accent") is None:
-        input_word_data = get_word_data(input_word_info["word"].lower())
+        input_word_data = get_word_data(input_word_info["word"].lower(),
+                                        fix_similar_letters=True)
     else:
         input_word_data = [input_word_info]
     

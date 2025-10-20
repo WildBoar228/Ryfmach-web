@@ -92,9 +92,11 @@ def get_transcript_mapping(s, t, max_shift=2):
     n = len(s)
     m = len(t)
     
-    dp = np.ones((n + 1, m + 1), dtype=np.int64) * 1000
+    dp = [[1000 for _ in range(m + 1)] for __ in range(n + 1)]
+    # dp = np.ones((n + 1, m + 1), dtype=np.int64) * 1000
     dp[0][0] = 0
-    anc = np.zeros((n + 1, m + 1), dtype=np.int32)
+    anc = [[0 for _ in range(m + 1)] for __ in range(n + 1)]
+    # anc = np.zeros((n + 1, m + 1), dtype=np.int32)
     for i in range(1, n + 1):
         for j in range(max(1, i - max_shift), min(m + 1, i + max_shift + 1)):
             if i >= 1 and i >= j - max_shift and dp[i - 1][j] < dp[i][j]:
@@ -108,11 +110,11 @@ def get_transcript_mapping(s, t, max_shift=2):
             if i >= 1 and j >= 1 and dp[i - 1][j - 1] < dp[i][j]:
                 dp[i][j] = dp[i - 1][j - 1]
                 anc[i][j] = 3
+            
+            replace_cost = get_replace_cost(s[i - 1] if i >= 1 else "",
+                                            t[j - 1] if j >= 1 else "")
 
-            dp[i][j] += get_replace_cost(s[i - 1] if i >= 1 else "",
-                                         t[j - 1] if j >= 1 else "")
-            # dp[i][j] += cost_to_replace[(s[i - 1] if i >= 1 else "",
-            #                              t[j - 1] if j >= 1 else "")]
+            dp[i][j] += replace_cost
     
     mapping = []
 
@@ -143,14 +145,13 @@ def get_transcript_mapping(s, t, max_shift=2):
     return mapping, dp[n][m]
 
 
-def get_rhyme_sounds_mapping(word1, accent1, word2, accent2, max_shift=5, use_prev_sound=True):
+def get_rhyme_sounds_mapping(word1, accent1, word2, accent2, max_shift=5, use_prev_sounds=0):
     tr1 = language.get_transcription(word1, accent1)
     tr2 = language.get_transcription(word2, accent2)
     cut_index1 = language.get_accent_in_transcription(tr1)
     cut_index2 = language.get_accent_in_transcription(tr2)
-    if use_prev_sound:
-        cut_index1 = max(0, cut_index1 - 1)
-        cut_index2 = max(0, cut_index2 - 2)
+    cut_index1 = max(0, cut_index1 - use_prev_sounds)
+    cut_index2 = max(0, cut_index2 - use_prev_sounds)
     
     cut_tr1 = tr1[cut_index1:]
     cut_tr2 = tr2[cut_index2:]
@@ -160,9 +161,9 @@ def get_rhyme_sounds_mapping(word1, accent1, word2, accent2, max_shift=5, use_pr
     return pairs, err
 
 
-def get_rhyme_quality(word1, accent1, word2, accent2, max_shift=5, use_prev_sound=False):
+def get_rhyme_quality(word1, accent1, word2, accent2, max_shift=5):
     return get_rhyme_sounds_mapping(word1, accent1, word2, accent2,
-                                    max_shift=max_shift, use_prev_sound=use_prev_sound)[1]
+                                    max_shift=max_shift, use_prev_sounds=0)[1]
 
 
 run_first_iter_replace_cost()
