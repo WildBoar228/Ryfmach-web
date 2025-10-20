@@ -33,8 +33,8 @@ def update_rhymes():
         rhymes = []
         word_found = False
 
-    app.logger.info("%s Response time: %d ms", str(request.remote_addr),
-                    (time.time() - start_time) * 1000)
+    print(f"{str(request.remote_addr)} Response time: {int((time.time() - start_time) * 1000)} ms")
+
     session['input_word_info'] = input_word_info
     return jsonify(rhymes_list=rhymes, word_found=word_found)
 

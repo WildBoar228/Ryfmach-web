@@ -9,10 +9,10 @@ cost_to_replace = {
 
 
 def run_first_iter_replace_cost():
-    # delete vowel
-    for s in language.vowel_sound_list:
-        cost_to_replace[("_" + s + "_", "")] = 30
-        cost_to_replace[(s, "")] = 10
+    # # delete vowel
+    # for s in language.vowel_sound_list:
+    #     cost_to_replace[("_" + s + "_", "")] = 30
+    #     cost_to_replace[(s, "")] = 10
         
     # replace vowel with vowel
     for s1 in language.vowel_sound_list:
@@ -33,9 +33,9 @@ def run_first_iter_replace_cost():
                 cost_to_replace[(s1, "_" + s2 + "_")] = 30
                 cost_to_replace[("_" + s1 + "_", "_" + s2 + "_")] = 10
             
-    # delete consonant
-    for s in language.cons_sound_list:
-        cost_to_replace[(s, "")] = 2
+    # # delete consonant
+    # for s in language.cons_sound_list:
+    #     cost_to_replace[(s, "")] = 2
 
     # replace consonant with consonant
     for s1 in language.cons_sound_list:
@@ -88,15 +88,11 @@ def get_replace_cost(s1, s2):
     return 1000
 
 
-def get_transcript_mapping(s, t, max_shift=2):
+def calc_transcript_comp_dp(s, t, dp, anc, max_shift=2):
     n = len(s)
     m = len(t)
-    
-    dp = [[1000 for _ in range(m + 1)] for __ in range(n + 1)]
-    # dp = np.ones((n + 1, m + 1), dtype=np.int64) * 1000
     dp[0][0] = 0
-    anc = [[0 for _ in range(m + 1)] for __ in range(n + 1)]
-    # anc = np.zeros((n + 1, m + 1), dtype=np.int32)
+    
     for i in range(1, n + 1):
         for j in range(max(1, i - max_shift), min(m + 1, i + max_shift + 1)):
             if i >= 1 and i >= j - max_shift and dp[i - 1][j] < dp[i][j]:
@@ -116,38 +112,14 @@ def get_transcript_mapping(s, t, max_shift=2):
 
             dp[i][j] += replace_cost
     
-    mapping = []
-
-    i = n
-    j = m
-    while i >= 0 and j >= 0 and anc[i][j] != 0:
-        mapping.append((i - 1, j - 1))
-        if anc[i][j] == 1:
-            i -= 1
-        elif anc[i][j] == 2:
-            j -= 1
-        elif anc[i][j] == 3:
-            i -= 1
-            j -= 1
-        # else:
-        #     print("ERROR in anc: ")
-        #     pprint(anc)
-        #     pprint(dp)
-        #     print(i, j)
-        #     break
-    if i == 1 and j == 1:
-        mapping.append((i - 1, j - 1))
     
-    if __name__ == "__main__":
-        pprint(dp)
-        print(f"final error: ", dp[n][m])
-    
-    return mapping, dp[n][m]
+    # return mapping, dp_mat[n][m]
 
 
 def get_rhyme_sounds_mapping(word1, accent1, word2, accent2, max_shift=5, use_prev_sounds=0):
     tr1 = language.get_transcription(word1, accent1)
     tr2 = language.get_transcription(word2, accent2)
+
     cut_index1 = language.get_accent_in_transcription(tr1)
     cut_index2 = language.get_accent_in_transcription(tr2)
     cut_index1 = max(0, cut_index1 - use_prev_sounds)
@@ -155,15 +127,81 @@ def get_rhyme_sounds_mapping(word1, accent1, word2, accent2, max_shift=5, use_pr
     
     cut_tr1 = tr1[cut_index1:]
     cut_tr2 = tr2[cut_index2:]
-    pairs, err = get_transcript_mapping(cut_tr1, cut_tr2, max_shift)
+    n, m = len(cut_tr1), len(cut_tr2)
+
+    dp = [[1000 for _ in range(m + 1)] for __ in range(n + 1)]
+    anc = [[0 for _ in range(m + 1)] for __ in range(n + 1)]
+
+    calc_transcript_comp_dp(cut_tr1, cut_tr2, dp, anc, max_shift=max_shift)
+    
+    if __name__ == "__main__":
+        pprint(dp)
+        print(f"final error: ", dp[n][m])
+    
+    pairs = []
+    i = n
+    j = m
+    while i >= 0 and j >= 0 and anc[i][j] != 0:
+        pairs.append((i - 1, j - 1))
+        if anc[i][j] == 1:
+            i -= 1
+        elif anc[i][j] == 2:
+            j -= 1
+        elif anc[i][j] == 3:
+            i -= 1
+            j -= 1
+    if i == 1 and j == 1:
+        pairs.append((i - 1, j - 1))
+
     if __name__ == "__main__":
         print(f"pairs: {pairs}")
-    return pairs, err
+    return pairs, dp[n][m]
 
 
 def get_rhyme_quality(word1, accent1, word2, accent2, max_shift=5):
-    return get_rhyme_sounds_mapping(word1, accent1, word2, accent2,
-                                    max_shift=max_shift, use_prev_sounds=0)[1]
+    tr1 = language.get_transcription(word1, accent1)
+    tr2 = language.get_transcription(word2, accent2)
+    cut_index1 = language.get_accent_in_transcription(tr1)
+    cut_index2 = language.get_accent_in_transcription(tr2)
+    
+    cut_tr1 = tr1[cut_index1:]
+    cut_tr2 = tr2[cut_index2:]
+    
+    n, m = len(cut_tr1), len(cut_tr2)
+    dp = [[1000 for _ in range(m + 1)] for __ in range(n + 1)]
+    anc = [[0 for _ in range(m + 1)] for __ in range(n + 1)]
+    calc_transcript_comp_dp(cut_tr1, cut_tr2, dp, anc, max_shift)
+    suffix_cost = dp[n][m]
+    
+    if __name__ == "__main__":
+        pass
+        pprint(dp)
+        print(f"suffix dp: {suffix_cost}")
+    
+    cut_tr1 = tr1[cut_index1 - 1::-1]
+    cut_tr2 = tr2[cut_index2 - 1::-1]
+    n, m = len(cut_tr1), len(cut_tr2)
+    dp = [[1000 for _ in range(m + 1)] for __ in range(n + 1)]
+    anc = [[0 for _ in range(m + 1)] for __ in range(n + 1)]
+    calc_transcript_comp_dp(cut_tr1, cut_tr2, dp, anc, max_shift)
+
+    prefix_cost = 0
+    for i in range(1, min(n, m) + 1):
+        minim = dp[i][i]
+        for diff in range(-max_shift, max_shift + 1):
+            j = i + diff
+            if j >= 0 and j <= m and dp[i][j] < minim:
+                minim = dp[i][j]
+        prefix_cost += minim - i
+    
+    if __name__ == "__main__":
+        pass
+        pprint(dp)
+        print(f"prefix dp: {prefix_cost}")
+    
+        print(f"finally {word1}: {suffix_cost}, {prefix_cost} =  {suffix_cost * 10000 + (1000 + prefix_cost)}")
+
+    return suffix_cost * 10000 + (1000 + prefix_cost) # instead of tuple (suf, pref)
 
 
 run_first_iter_replace_cost()
@@ -193,12 +231,19 @@ if __name__ == "__main__":
 
     print()
     get_rhyme_quality(
-        "доктар", 1,
-        "токар", 1
+        "спадчынніца", 2,
+        "падчарыца", 1,
     )
 
     print()
     get_rhyme_quality(
-        "доктар", 1,
-        "абармотам", 5
+        "суладжанасці", 3,
+        "падчарыца", 1,
+    )
+
+
+    print()
+    get_rhyme_quality(
+        "яшчарыца", 0,
+        "падчарыца", 1,
     )

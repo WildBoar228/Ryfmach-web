@@ -8,6 +8,7 @@ from pprint import pprint
 
 MAX_RHYMES_IN_RESP = 2000
 MAX_RHYME_MISTAKE = 3
+MIN_RHYMES_ADAPTIVE = 25
 
 
 def get_word_dict(w):
@@ -56,8 +57,6 @@ def get_word_data(input_word: str, fix_similar_letters: bool = False):
             if not (0 < word_template.count('_') <= 5):
                 fix_similar_letters = False
             else:
-                print(f"fix letters: {word_template}")
-                
                 match = cur.execute('''SELECT * FROM words WHERE word LIKE ?
                                     ORDER BY word, initial_id, accent_index;''',
                                     (word_template,)).fetchall()
@@ -342,11 +341,11 @@ def find_rhymes(input_word: str,
     
     output_str = f'{mistake}  {input_word} ({accent}):  '
     if mistake == -1:
-        if len(rhymes) < 10:
+        if len(rhymes) < MIN_RHYMES_ADAPTIVE:
             output_str += f'{len(rhymes)}  '
 
             for mst in range(1, MAX_RHYME_MISTAKE + 1):
-                if len(rhymes) < 10:
+                if len(rhymes) < MIN_RHYMES_ADAPTIVE:
                     old_size = len(rhymes)
                     rhymes1 = find_rhymes(input_word, accent, filtered_posp,
                                           only_initial, mst, cnt_limit=cnt_limit // 2,
