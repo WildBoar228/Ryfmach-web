@@ -158,7 +158,7 @@ def get_rhyme_sounds_mapping(word1, accent1, word2, accent2, max_shift=5, use_pr
     return pairs, dp[n][m]
 
 
-def get_rhyme_quality(word1, accent1, word2, accent2, max_shift=5):
+def get_rhyme_penalty(word1, accent1, word2, accent2, max_shift=5):
     tr1 = language.get_transcription(word1, accent1)
     tr2 = language.get_transcription(word2, accent2)
     cut_index1 = language.get_accent_in_transcription(tr1)
@@ -230,20 +230,20 @@ if __name__ == "__main__":
 
 
     print()
-    get_rhyme_quality(
+    get_rhyme_penalty(
         "спадчынніца", 2,
         "падчарыца", 1,
     )
 
     print()
-    get_rhyme_quality(
+    get_rhyme_penalty(
         "суладжанасці", 3,
         "падчарыца", 1,
     )
 
 
     print()
-    get_rhyme_quality(
-        "яшчарыца", 0,
-        "падчарыца", 1,
+    get_rhyme_penalty(
+        "абвыклы", 3,
+        "рыфма", 1,
     )

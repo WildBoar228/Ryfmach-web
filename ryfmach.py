@@ -9,6 +9,7 @@ from pprint import pprint
 MAX_RHYMES_IN_RESP = 2000
 MAX_RHYME_MISTAKE = 3
 MIN_RHYMES_ADAPTIVE = 25
+MAX_ACCEPTABLE_PENALTY = 13 * 10000
 
 
 def get_word_dict(w):
@@ -218,7 +219,7 @@ def quality_sort_words_key(compare_with):
         global alphabet
         try:
             return (
-                sounds.get_rhyme_quality(
+                sounds.get_rhyme_penalty(
                     w, accent,
                     compare_with["word"], compare_with["accent"]
                 ),
@@ -248,7 +249,7 @@ def json_sort_key(word_key):
 
 
 def find_rhymes(input_word: str,
-                accent: int,
+                input_accent: int,
                 filtered_posp: list[bool] = [True, True, True, True, True, True, True,],
                 only_initial: bool = False,
                 mistake: int = 0,
@@ -256,11 +257,11 @@ def find_rhymes(input_word: str,
                 cnt_limit=300,
                 words_sort_key=alphabet_sort_words_key):
     
-    working_parts = [get_working_part(input_word, accent, i)
+    working_parts = [get_working_part(input_word, input_accent, i)
                      for i in range(0, max(0, mistake) + 1)]
     # print(working_parts)
     
-    sound_hashes = [get_sound_hash(input_word, accent, i)
+    sound_hashes = [get_sound_hash(input_word, input_accent, i)
                     for i in range(0, max(0, mistake) + 1)]
 
     try:
@@ -339,7 +340,7 @@ def find_rhymes(input_word: str,
             k += 1
     rhymes = rhymes[:k]
     
-    output_str = f'{mistake}  {input_word} ({accent}):  '
+    output_str = f'{mistake}  {input_word} ({input_accent}):  '
     if mistake == -1:
         if len(rhymes) < MIN_RHYMES_ADAPTIVE:
             output_str += f'{len(rhymes)}  '
@@ -347,7 +348,7 @@ def find_rhymes(input_word: str,
             for mst in range(1, MAX_RHYME_MISTAKE + 1):
                 if len(rhymes) < MIN_RHYMES_ADAPTIVE:
                     old_size = len(rhymes)
-                    rhymes1 = find_rhymes(input_word, accent, filtered_posp,
+                    rhymes1 = find_rhymes(input_word, input_accent, filtered_posp,
                                           only_initial, mst, cnt_limit=cnt_limit // 2,
                                           words_sort_key=words_sort_key)
                     
@@ -355,7 +356,7 @@ def find_rhymes(input_word: str,
     
                     k = old_size
                     for i in range(k, len(rhymes)):
-                        if rhymes[i]["is_initial"]:
+                        if rhymes[i].get("initial_word") is None: #rhymes[i]["is_initial"]:
                             used_key = (rhymes[i]["word"], rhymes[i]["accent"])
                         else:
                             used_key = (rhymes[i]["initial_word"], rhymes[i]["initial_accent"])
@@ -371,6 +372,18 @@ def find_rhymes(input_word: str,
             output_str += '=  '
             
             rhymes = sorted(rhymes, key=json_sort_key(words_sort_key))
+
+        # check_rhyme = MIN_RHYMES_ADAPTIVE
+        # step = (len(rhymes) - check_rhyme + 1) // 2
+        # while step > 0 and check_rhyme < len(rhymes):
+        #     if sounds.get_rhyme_penalty(input_word, input_accent,
+        #                                 rhymes[check_rhyme]["word"],
+        #                                 rhymes[check_rhyme]["accent"]) <= MAX_ACCEPTABLE_PENALTY:
+        #         check_rhyme += step
+        #     step //= 2
+
+        # print(f"cut righter than {check_rhyme} (initially {len(rhymes)})")
+        # rhymes = rhymes[:check_rhyme]
     
     if len(rhymes) > cnt_limit:
         rhymes = rhymes[:cnt_limit]
