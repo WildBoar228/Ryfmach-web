@@ -1,0 +1,56 @@
+
+
+    <div id="search-block" class="center-block">
+        <div class="search-block">
+            <input type="search" class="word-search" id="search-input" placeholder="Увядзіце слова..." value="{{ input_word }}" autocomplete="off" autofocus >
+            <button type="button" class="button-filters modest-button" data-bs-toggle="offcanvas" data-bs-target="#filters-offcanvas" aria-controls="filters-offcanvas">
+                <i id="filters-icon" class="fa fa-cog" width="30pt"></i>
+            </button>
+            <button id="search-button" type="button" class="button-search bright-button" onclick="post_rhymes_request();">
+                <i id="search-icon" class="fa fa-search" width="30pt"></i>
+                <div id="search-spinner" class="spinner-border spinner-border-sm button-spinner" style="display: none"></div>
+            </button>
+        </div>
+    </div>
+
+    <div id="search-status-info" class="center-block"> </div>
+
+    <div class="modal" tabindex="-1" id="manual-accent-modal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title info-text">Укажыце націскную галосную</h5>
+                    <button type="button" class="close-button" data-bs-dismiss="modal" aria-label="Close"><i class="fa fa-times" aria-hidden="true"></i></button>
+                </div>
+                <div class="modal-body">
+
+                    <div class="center-block" id="manual-accent-block">
+                        <div class="letter-buttons-block" id="letter-buttons-block">
+                            
+                        </div>
+                    </div>
+                    
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="dull-button rhyme-word" data-bs-dismiss="modal">Адмена</button>
+                    <button type="button" class="bright-button rhyme-word" onclick="post_rhymes_with_manual_accent()">Далей</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="word-variants-block" class="center-block" style="visibility: hidden">
+        <div class="dropdown">
+            <button class="dropdown-light rhyme-word" type="button" id="dropdown-choose-word" data-bs-toggle="dropdown" aria-expanded="false">
+                -
+            </button>
+            <ul class="dropdown-menu" id="dropdown-choose-word-menu" aria-labelledby="dropdown-choose-word">
+                
+            </ul>
+        </div>
+        <div class="info-text">
+            <p id="search-status-text" style="margin: 20px;">Нічога няма</p>
+        </div>
+    </div>
+
+    <div id="error-msg"></div>

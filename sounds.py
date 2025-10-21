@@ -117,8 +117,8 @@ def calc_transcript_comp_dp(s, t, dp, anc, max_shift=2):
 
 
 def get_rhyme_sounds_mapping(word1, accent1, word2, accent2, max_shift=5, use_prev_sounds=0):
-    tr1 = language.get_transcription(word1, accent1)
-    tr2 = language.get_transcription(word2, accent2)
+    tr1 = language.get_transcription_sounds(word1, accent1)
+    tr2 = language.get_transcription_sounds(word2, accent2)
 
     cut_index1 = language.get_accent_in_transcription(tr1)
     cut_index2 = language.get_accent_in_transcription(tr2)
@@ -159,8 +159,8 @@ def get_rhyme_sounds_mapping(word1, accent1, word2, accent2, max_shift=5, use_pr
 
 
 def get_rhyme_penalty(word1, accent1, word2, accent2, max_shift=5):
-    tr1 = language.get_transcription(word1, accent1)
-    tr2 = language.get_transcription(word2, accent2)
+    tr1 = language.get_transcription_sounds(word1, accent1)
+    tr2 = language.get_transcription_sounds(word2, accent2)
     cut_index1 = language.get_accent_in_transcription(tr1)
     cut_index2 = language.get_accent_in_transcription(tr2)
     

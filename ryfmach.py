@@ -43,7 +43,7 @@ def get_word_dict(w):
     return word_data
 
 
-def get_word_data(input_word: str, fix_similar_letters: bool = False):
+def get_word_data_from_db(input_word: str, fix_similar_letters: bool = False):
     try:
         db_lock.acquire(True)
         words = []
@@ -99,7 +99,7 @@ def get_word_data(input_word: str, fix_similar_letters: bool = False):
 def get_working_part(word: str, accent: int, mistake: int = 0):
     if mistake < 0:
         mistake = 0
-    t = get_transcription(word, accent)
+    t = get_transcription_sounds(word, accent)
 
     acc_sound = 0
 
@@ -403,7 +403,7 @@ def rhymes_text_list(input_word_info):
     if not is_belarusian(input_word_info["word"]) or len(input_word_info["word"]) > 40:
         return []
     if input_word_info.get("accent") is None:
-        input_word_data = get_word_data(input_word_info["word"].lower(),
+        input_word_data = get_word_data_from_db(input_word_info["word"].lower(),
                                         fix_similar_letters=True)
     else:
         input_word_data = [input_word_info]
@@ -482,7 +482,7 @@ if __name__ == "__main__":
          ("вузел", 1),]
 
     for i, test in enumerate(tests):
-        print(f'{i}  {test[0]}:    {' '.join(get_transcription(*test))}')
+        print(f'{i}  {test[0]}:    {' '.join(get_transcription_sounds(*test))}')
         for j in range(4):
             print(f'{get_working_part(*test, mistake=j)} {get_sound_hash(*test, mistake=j)}')
         print()

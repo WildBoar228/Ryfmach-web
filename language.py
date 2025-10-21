@@ -189,9 +189,9 @@ def accent_pair(sound):
 def non_accent_pair(sound):
     if len(sound) >= 3 and sound[0] == sound[-1] == "_":
         return sound[1:-1] if sound[1:-1] in vowel_sound_list else None
+    
 
-
-def get_transcription(word, accent):
+def get_transcription_sounds(word, accent):
     t = []
     for i in range(len(word)):        
         if word[i] in "аоуыэі":
