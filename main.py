@@ -18,7 +18,8 @@ def rhyme_page():
     return render_template(
         'rhyme_page.html',
         title="Рыфмач&nbsp;&ndash; падабраць рыфму",
-        input_word=input_word_info["word"]
+        input_word=input_word_info["word"],
+        add_search_filter_button=True,
     )
 
 
@@ -50,7 +51,8 @@ def phonetics_page():
     return render_template(
         'phonetics_page.html',
         title="Рыфмач&nbsp;&ndash; фанетычны разбор",
-        input_word=input_word_info["word"]
+        input_word=input_word_info["word"],
+        add_search_filter_button=False,
     )
 
 

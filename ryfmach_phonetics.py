@@ -18,16 +18,32 @@ class PHONETIC_PHENOMENA:
 
 
 def get_transcription_full(word, accent):
+    letter_map = [[] for _ in range(len(word))]
     t = []
     phenomena = []
     for i in range(len(word)):
         if word[i] in "аоуыэі":
             if accent == i:
-                t.append([i, f"_{word[i]}_"])
+                t.append(f"_{word[i]}_")
             else:
-                t.append([i, word[i]])
+                t.append(word[i])
+            letter_map[i] += [len(t) - 1]
             
         elif word[i] in vowels:
+            if accent == i:
+                t.append(f"_{iotation[word[i]]}_")
+            else:
+                t.append(iotation[word[i]])
+                    
+            letter_map[i] += [len(t) - 1]
+
+        elif word[i] in consonants:
+            t.append(word[i])
+            letter_map[i] += [len(t) - 1]
+
+
+    for i in range(len(word)):
+        if word[i] in vowels and not word[i] in "аоуыэі":
             # ётацыя
             if (i == 0 or
                 word[i - 1] in vowels or
@@ -35,33 +51,40 @@ def get_transcription_full(word, accent):
                 word[i - 1] == "ь" or
                 word[i - 1] == "'" or
                 word[i - 1] == "-"):
-                    t.append([i, "й"])
-                    phenomena.append((i, PHONETIC_PHENOMENA.IOTATION))
-            
-            if accent == i:
-                t.append([i, f"_{iotation[word[i]]}_"])
-            else:
-                t.append([i, iotation[word[i]]])
+                    sound_i = letter_map[i][0]
+                    phenomena.append((sound_i, t.copy(), PHONETIC_PHENOMENA.IOTATION))
+                    t.insert(sound_i, "й")
+
+                    # for j in range(len(phenomena)):
+                    #     if phenomena[j][0] >= sound_i:
+                    #         phenomena[j] = (phenomena[j][0] + 1, *phenomena[j][1:])
+                    for j in range(len(letter_map)):
+                        letter_map[j] = [s if s < sound_i else s + 1 for s in letter_map[j]]
 
         elif word[i] in consonants:
-            t.append([i, word[i]])
-
+            sound_i = letter_map[i][-1]
             # змягчэнне зычных
             if (i + 1 < len(word) and
                 (word[i + 1] in softening_vowels or word[i + 1] == 'ь') and
-                soft_pair(t[-1][1])):
-                    phenomena.append((i, PHONETIC_PHENOMENA.CONS_SOFTENING))
-                    t[-1][1] = soft_pair(t[-1][1])
-
+                soft_pair(t[sound_i])):
+                    if t[sound_i] == 'ц':
+                        t[sound_i] = 'т'
+                    phenomena.append((sound_i, t.copy(), PHONETIC_PHENOMENA.CONS_SOFTENING))
+                    t[sound_i] = soft_pair(t[sound_i])
+    
     # афрыкаты
     i = 0
     while i < len(t) - 1:
         if t[i] == "д" and t[i + 1] in ["ж", "з", "з'"]:
-            phenomena.append((i, PHONETIC_PHENOMENA.AFFRICATES))
-            for i in range(len(phenomena)):
-                if phenomena[i][0] >= i + 1:
-                    phenomena[i] = (phenomena[i][0] - 1, phenomena[i][1])
-            t[i][1] += t[i + 1][1]
+            phenomena.append((i, t.copy(), PHONETIC_PHENOMENA.AFFRICATES))
+            # for j in range(len(phenomena)):
+            #     if phenomena[j][0] >= i + 1:
+            #         phenomena[j] = (phenomena[j][0] - 1, *phenomena[j][1:])
+            t[i] += t[i + 1]
+            for j in range(len(letter_map)):
+                for k in range(len(letter_map[j])):
+                    if letter_map[j][k] >= i + 1:
+                        letter_map[j][k] -= 1
             t.pop(i + 1)
         i += 1
 
@@ -71,47 +94,47 @@ def get_transcription_full(word, accent):
 
         for i in range(len(t)):
             # асіміляцыя па глухасці + аглушэнне на канцы
-            if (is_ring(t[i][1]) and thud_pair(t[i][1]) and
-                (i + 1 >= len(t) or is_thud(t[i + 1][1]))):
-                    phenomena.append((i, PHONETIC_PHENOMENA.THUD_ASSIMILATION))
-                    t[i][1] = thud_pair(t[i][1])
+            if (is_ring(t[i]) and thud_pair(t[i]) and
+                (i + 1 >= len(t) or is_thud(t[i + 1]))):
+                    phenomena.append((i, t.copy(), PHONETIC_PHENOMENA.THUD_ASSIMILATION))
+                    t[i] = thud_pair(t[i])
                     changed = True
             # асіміляцыя па звонкасці
-            elif (is_thud(t[i][1]) and ring_pair(t[i][1]) and
-                (i + 1 < len(t) and is_ring(t[i + 1][1]) and not is_sonor(t[i + 1][1]))):
-                    phenomena.append((i, PHONETIC_PHENOMENA.RING_ASSIMILATION))
-                    t[i][1] = ring_pair(t[i][1])
+            elif (is_thud(t[i]) and ring_pair(t[i]) and
+                (i + 1 < len(t) and is_ring(t[i + 1]) and not is_sonor(t[i + 1]))):
+                    phenomena.append((i, t.copy(), PHONETIC_PHENOMENA.RING_ASSIMILATION))
+                    t[i] = ring_pair(t[i])
                     changed = True
 
             # асіміляцыя па мяккасці
             if (i + 1 < len(t) and
-                (t[i][1] in ["з", "с"] and is_soft(t[i + 1][1]) and t[i + 1][1] not in ["г'", "к'", "х'"] or 
-                 t[i][1] in ["д", "т", "дз", "ц"] and t[i + 1][1] == "в'")):
-                    phenomena.append((i, PHONETIC_PHENOMENA.SOFT_ASSIMILATION))
-                    t[i][1] = soft_pair(t[i][1])
+                (t[i] in ["з", "с"] and is_soft(t[i + 1]) and t[i + 1] not in ["г'", "к'", "х'"] or 
+                 t[i] in ["д", "т", "дз", "ц"] and t[i + 1] == "в'")):
+                    phenomena.append((i, t.copy(), PHONETIC_PHENOMENA.SOFT_ASSIMILATION))
+                    t[i] = soft_pair(t[i])
                     changed = True
 
             # прыпадабненне шыпячага да свісцячага
             if (i + 1 < len(t) and
-                is_hiss(t[i][1]) and is_whistl(t[i + 1][1])):
-                    phenomena.append((i, PHONETIC_PHENOMENA.WHISTL_ASSIMILATION))
-                    t[i][1] = whistl_pair(t[i][1])
+                is_hiss(t[i]) and is_whistl(t[i + 1])):
+                    phenomena.append((i, t.copy(), PHONETIC_PHENOMENA.WHISTL_ASSIMILATION))
+                    t[i] = whistl_pair(t[i])
                     changed = True
             # прыпадабненне свісцячага да шыпячага
             elif (i + 1 < len(t) and
-                is_whistl(t[i][1]) and is_hiss(t[i + 1][1])):
-                    phenomena.append((i, PHONETIC_PHENOMENA.HISS_ASSIMILATION))
-                    t[i][1] = hiss_pair(t[i][1])
+                is_whistl(t[i]) and is_hiss(t[i + 1])):
+                    phenomena.append((i, t.copy(), PHONETIC_PHENOMENA.HISS_ASSIMILATION))
+                    t[i] = hiss_pair(t[i])
                     changed = True
 
             # асіміляцыя зубных гукаў
             if (i + 1 < len(t) and
-                t[i][1] in ["д", "т"] and t[i + 1][1] in ["ц", "ч"]):
-                    phenomena.append((i, PHONETIC_PHENOMENA.DENTAL_ASSIMILATION))
-                    t[i][1] = t[i + 1][1]
+                t[i] in ["д", "т"] and t[i + 1] in ["ц", "ч"]):
+                    phenomena.append((i, t.copy(), PHONETIC_PHENOMENA.DENTAL_ASSIMILATION))
+                    t[i] = t[i + 1]
                     changed = True
 
-    return t, phenomena
+    return letter_map, t, phenomena
 
 
 def input_phonetic_analysis(input_word_info):
@@ -142,9 +165,21 @@ def input_phonetic_analysis(input_word_info):
 
 
 def word_phonetic_analysis(wdict: dict):
-    tr, phenomena = get_transcription_full(wdict["word"], wdict["accent"])
-    print(tr, phenomena)
-    return {"transcription": tr, "phenomena": phenomena}
+    letter_map, tr, phenomena = get_transcription_full(wdict["word"], wdict["accent"])
+    print(letter_map, tr, phenomena)
+    
+    for ph in phenomena:
+        print(ph[2])
+        for c in ph[1]:
+            print(c.rjust(4, ' '), end='')
+        print()
+        print('    ' * ph[0] + '   ^', ph[0])
+    
+    for c in tr:
+        print(c.rjust(4, ' '), end='')
+    print()
+
+    return {"letter_map": letter_map, "transcription": tr, "phenomena": phenomena}
 
 
 if __name__ == "__main__":
@@ -156,4 +191,14 @@ if __name__ == "__main__":
     word_phonetic_analysis({
          "word": "ксёндз",
          "accent": 2,
+    })
+    
+    word_phonetic_analysis({
+         "word": "гвоздзь",
+         "accent": 2,
+    })
+    
+    word_phonetic_analysis({
+         "word": "нарэшце",
+         "accent": 3,
     })

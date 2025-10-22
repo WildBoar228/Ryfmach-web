@@ -4,7 +4,7 @@ var vowels= "аеёіоуыэюя";
 var phon_response = [];
 var precalc_phon_html = [];
 
-var input_word;
+var input_word = "";
 var accent_index = -1;
 
 const search_input_phon = document.getElementById("search-input");
@@ -28,6 +28,7 @@ const fa_long_arrow_right = `<i class="fa fa-long-arrow-right" aria-hidden="true
 
 window.onload = () => {
     search_button_phon.onclick = post_phon_request;
+    document.getElementById("search-accent-button").onclick = post_phon_with_manual_accent;
 }
 
 
@@ -109,14 +110,15 @@ function process_phon_response(data){
         const transcription = data.word_variants[i].transcription;
         const phenomena = data.word_variants[i].phenomena;
 
-        for (let j in transcription.length) {
+        for (let j in transcription) {
             precalc_phon_html[i] += `${transcription[j][1]} `;
         }
-        precalc_phon_html[i] += `\n<ol>`;
 
+        precalc_phon_html[i] += `\n<ol>`;
         for (let j in transcription.length) {
             precalc_phon_html[i] += `<li>${word_data["word"][transcription[i][0]]}   ${fa_long_arrow_right}   ${transcription[i][1]}</li>`;
         }
+        precalc_phon_html[i] += `\n</ol>`;
     }
 
     update_phon(0);
