@@ -2,6 +2,7 @@ from ryfmach import get_word_data_from_db, get_word_dict
 import language
 from language import *
 import sounds
+from pprint import pprint
 
 
 class PHONETIC_PHENOMENA:
@@ -113,13 +114,37 @@ def get_transcription_full(word, accent):
     return t, phenomena
 
 
-def input_phonetic_analysis(input_word: str, input_accent: str):
-    pass
+def input_phonetic_analysis(input_word_info):
+    input_word_info["word"] = input_word_info["word"].replace("и", "і")
+    input_word_info["word"] = input_word_info["word"].replace("щ", "ў")
+    input_word_info["word"] = input_word_info["word"].replace("ъ", "'")
+
+    if not is_belarusian(input_word_info["word"]) or len(input_word_info["word"]) > 40:
+        return []
+    if input_word_info.get("accent") is None:
+        word_variants = get_word_data_from_db(input_word_info["word"].lower(),
+                                              fix_similar_letters=True)
+    else:
+        word_variants = [input_word_info]
+    
+    analysed = []
+    for wv in word_variants:
+        tr, ph = get_transcription_full(wv["word"], wv["accent"])
+        analys = {
+             "word_variant": wv,
+             "transcription": tr,
+             "phenomena": ph,
+        }
+        analysed.append(analys)
+        
+    pprint(analysed)
+    return analysed
 
 
 def word_phonetic_analysis(wdict: dict):
     tr, phenomena = get_transcription_full(wdict["word"], wdict["accent"])
     print(tr, phenomena)
+    return {"transcription": tr, "phenomena": phenomena}
 
 
 if __name__ == "__main__":

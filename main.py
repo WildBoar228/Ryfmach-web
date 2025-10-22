@@ -1,6 +1,6 @@
 from flask import Flask, render_template, redirect, request, make_response, session, jsonify, send_from_directory
 import json
-import ryfmach
+import ryfmach, ryfmach_phonetics
 from pprint import pprint
 import logging
 import os
@@ -64,16 +64,13 @@ def phonetic_analysis():
     start_time = time.time()
     app.logger.info("%s Request rhyme: %s", str(request.remote_addr), str(input_word_info))
 
-    # rhymes = ryfmach.rhymes_text_list(input_word_info)
-    # word_found = True
-    # if rhymes is None:
-    #     rhymes = []
-    #     word_found = False
+    analysed = ryfmach_phonetics.input_phonetic_analysis(input_word_info)
+    word_found = len(analysed) > 0
 
     print(f"{str(request.remote_addr)} Response time: {int((time.time() - start_time) * 1000)} ms")
 
     session['input_word_info'] = input_word_info
-    return jsonify(phon_analys=[], word_found=False)
+    return jsonify(word_variants=analysed, word_found=word_found)
 
 
 @app.route('/favicon.ico')

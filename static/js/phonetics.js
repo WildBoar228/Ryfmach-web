@@ -21,7 +21,10 @@ const dropdown_choose_word_menu = document.getElementById("dropdown-choose-word-
 const manual_accent_modal = new bootstrap.Modal(document.getElementById('manual-accent-modal'));
 const letter_buttons_block = document.getElementById("letter-buttons-block");
 
+const phon_analysis_block = document.getElementById("phon-analysis-block");
+
 const fa_long_arrow_left = `<i class="fa fa-long-arrow-left" aria-hidden="true"></i>`
+const fa_long_arrow_right = `<i class="fa fa-long-arrow-right" aria-hidden="true"></i>`
 
 window.onload = () => {
     search_button_phon.onclick = post_phon_request;
@@ -74,10 +77,9 @@ function update_phon(word_variant_index){
     if (precalc_phon_html.length > 1)
         dropdown_choose_word.innerHTML = `${word_variant_index + 1}/${precalc_phon_html.length} `;
     dropdown_choose_word.innerHTML +=
-        word_data_to_html(phon_response.phon_analys[word_variant_index].word_variant);
+        word_data_to_html(phon_response.word_variants[word_variant_index].word_variant);
     
-    phon_analys.innerHTML = precalc_phon_html[word_variant_index];
-    phon_count_text.innerHTML = precalc_phon_count[word_variant_index];
+    phon_analysis_block.innerHTML = precalc_phon_html[word_variant_index];
 }
 
 
@@ -90,26 +92,30 @@ function process_phon_response(data){
     word_variants_block.style.visibility="visible";
     dropdown_choose_word.innerHTML="-";
     dropdown_choose_word_menu.innerHTML = "";
-    search_status_text.innerHTML = `Варыянты: ${Object.keys(data.phon_analys).length}`;
+    search_status_text.innerHTML = `Варыянты: ${Object.keys(data.word_variants).length}`;
     search_status_info.innerHTML = "";
 
-    if (Object.keys(data.phon_analys).length == 0){
+    if (Object.keys(data.word_variants).length == 0){
         generate_letter_buttons();
         return;
     }
 
-    precalc_phon_html = precalc_phon_html.slice(0, data.phon_analys)
-    for (i in data.phon_analys){
-        word_data = data.phon_analys[i].word_variant;
+    precalc_phon_html = precalc_phon_html.slice(0, data.word_variants);
+    for (i in data.word_variants){
+        word_data = data.word_variants[i].word_variant;
         dropdown_choose_word_menu.innerHTML += `<li><button class="dropdown-item" onclick=update_phon(${i})>${word_data_to_html(word_data)}</button></li>`;
 
         precalc_phon_html[i] = "";
-        const phon_data = data.phon_analysys[i].phon_data;
+        const transcription = data.word_variants[i].transcription;
+        const phenomena = data.word_variants[i].phenomena;
 
-        if (phon_data.length == 0){
-            precalc_phon_html[i] += `<div class="alert alert-info info-text" role="alert">Пу-пу-пу! Рыфмаў абранай трапнасці не знайшлося. Змяніце фільтры (<i class="fa fa-cog"></i>) або паспрабуйце іншае слова.</div>`;
+        for (let j in transcription.length) {
+            precalc_phon_html[i] += `${transcription[j][1]} `;
         }
-        else{
+        precalc_phon_html[i] += `\n<ol>`;
+
+        for (let j in transcription.length) {
+            precalc_phon_html[i] += `<li>${word_data["word"][transcription[i][0]]}   ${fa_long_arrow_right}   ${transcription[i][1]}</li>`;
         }
     }
 
