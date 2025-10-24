@@ -18,7 +18,7 @@ class PHONETIC_PHENOMENA:
 
 
 def get_transcription_full(word, accent):
-    letter_map = [[] for _ in range(len(word))]
+    letter_to_sounds = [[] for _ in range(len(word))]
     t = []
     phenomena = []
     for i in range(len(word)):
@@ -27,7 +27,7 @@ def get_transcription_full(word, accent):
                 t.append(f"_{word[i]}_")
             else:
                 t.append(word[i])
-            letter_map[i] += [len(t) - 1]
+            letter_to_sounds[i] += [len(t) - 1]
             
         elif word[i] in vowels:
             if accent == i:
@@ -35,11 +35,11 @@ def get_transcription_full(word, accent):
             else:
                 t.append(iotation[word[i]])
                     
-            letter_map[i] += [len(t) - 1]
+            letter_to_sounds[i] += [len(t) - 1]
 
         elif word[i] in consonants:
             t.append(word[i])
-            letter_map[i] += [len(t) - 1]
+            letter_to_sounds[i] += [len(t) - 1]
 
 
     for i in range(len(word)):
@@ -51,18 +51,20 @@ def get_transcription_full(word, accent):
                 word[i - 1] == "ь" or
                 word[i - 1] == "'" or
                 word[i - 1] == "-"):
-                    sound_i = letter_map[i][0]
+                    sound_i = letter_to_sounds[i][0]
                     phenomena.append((sound_i, t.copy(), PHONETIC_PHENOMENA.IOTATION))
                     t.insert(sound_i, "й")
 
                     # for j in range(len(phenomena)):
                     #     if phenomena[j][0] >= sound_i:
                     #         phenomena[j] = (phenomena[j][0] + 1, *phenomena[j][1:])
-                    for j in range(len(letter_map)):
-                        letter_map[j] = [s if s < sound_i else s + 1 for s in letter_map[j]]
+                    for j in range(len(letter_to_sounds)):
+                        letter_to_sounds[j] = [s if s < sound_i else s + 1 for s in letter_to_sounds[j]]
+                        if letter_to_sounds[j] and letter_to_sounds[j][0] == sound_i + 1:
+                             letter_to_sounds[j].insert(0, sound_i)
 
         elif word[i] in consonants:
-            sound_i = letter_map[i][-1]
+            sound_i = letter_to_sounds[i][-1]
             # змягчэнне зычных
             if (i + 1 < len(word) and
                 (word[i + 1] in softening_vowels or word[i + 1] == 'ь') and
@@ -81,10 +83,10 @@ def get_transcription_full(word, accent):
             #     if phenomena[j][0] >= i + 1:
             #         phenomena[j] = (phenomena[j][0] - 1, *phenomena[j][1:])
             t[i] += t[i + 1]
-            for j in range(len(letter_map)):
-                for k in range(len(letter_map[j])):
-                    if letter_map[j][k] >= i + 1:
-                        letter_map[j][k] -= 1
+            for j in range(len(letter_to_sounds)):
+                for k in range(len(letter_to_sounds[j])):
+                    if letter_to_sounds[j][k] >= i + 1:
+                        letter_to_sounds[j][k] -= 1
             t.pop(i + 1)
         i += 1
 
@@ -134,7 +136,7 @@ def get_transcription_full(word, accent):
                     t[i] = t[i + 1]
                     changed = True
 
-    return letter_map, t, phenomena
+    return letter_to_sounds, t, phenomena
 
 
 def input_phonetic_analysis(input_word_info):
@@ -152,34 +154,46 @@ def input_phonetic_analysis(input_word_info):
     
     analysed = []
     for wv in word_variants:
-        tr, ph = get_transcription_full(wv["word"], wv["accent"])
-        analys = {
-             "word_variant": wv,
-             "transcription": tr,
-             "phenomena": ph,
-        }
-        analysed.append(analys)
+        analysed.append(word_phonetic_analysis(wv))
         
     pprint(analysed)
     return analysed
 
 
 def word_phonetic_analysis(wdict: dict):
-    letter_map, tr, phenomena = get_transcription_full(wdict["word"], wdict["accent"])
-    print(letter_map, tr, phenomena)
-    
-    for ph in phenomena:
-        print(ph[2])
-        for c in ph[1]:
-            print(c.rjust(4, ' '), end='')
-        print()
-        print('    ' * ph[0] + '   ^', ph[0])
-    
-    for c in tr:
-        print(c.rjust(4, ' '), end='')
-    print()
+    letter_to_sounds, tr, phenomena = get_transcription_full(wdict["word"], wdict["accent"])
+    letter_map = []
 
-    return {"letter_map": letter_map, "transcription": tr, "phenomena": phenomena}
+    i = 0
+    while i < len(letter_to_sounds):
+        if i > 0 and letter_to_sounds[i - 1] == letter_to_sounds[i]:
+            letter_map[-1][0] += [i]
+        else:
+            letter_map.append([[i], letter_to_sounds[i]])
+        i += 1
+    
+    print(letter_to_sounds)
+    print(letter_map, tr, phenomena)
+    if __name__ == "__main__":
+        print(letter_map, tr, phenomena)
+    
+        # for ph in phenomena:
+        #     print(ph[2])
+        #     for c in ph[1]:
+        #         print(c.rjust(4, ' '), end='')
+        #     print()
+        #     print('    ' * ph[0] + '   ^', ph[0])
+        
+        # for c in tr:
+        #     print(c.rjust(4, ' '), end='')
+        # print()
+
+    return {
+         "word_variant": wdict,
+         "letter_map": letter_map,
+         "transcription": tr,
+         "phenomena": phenomena
+    }
 
 
 if __name__ == "__main__":

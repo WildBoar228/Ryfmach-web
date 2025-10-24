@@ -107,16 +107,27 @@ function process_phon_response(data){
         dropdown_choose_word_menu.innerHTML += `<li><button class="dropdown-item" onclick=update_phon(${i})>${word_data_to_html(word_data)}</button></li>`;
 
         precalc_phon_html[i] = "";
+        const word_text = data.word_variants[i].word_variant.word;
+        const letter_map = data.word_variants[i].letter_map;
         const transcription = data.word_variants[i].transcription;
         const phenomena = data.word_variants[i].phenomena;
 
         for (let j in transcription) {
-            precalc_phon_html[i] += `${transcription[j][1]} `;
+            precalc_phon_html[i] += `${transcription[j]} `;
         }
 
         precalc_phon_html[i] += `\n<ol>`;
-        for (let j in transcription.length) {
-            precalc_phon_html[i] += `<li>${word_data["word"][transcription[i][0]]}   ${fa_long_arrow_right}   ${transcription[i][1]}</li>`;
+        
+        for (let j in letter_map) {
+            precalc_phon_html[i] += `<li>`;
+            for (let k in letter_map[j][0]) {
+                precalc_phon_html[i] += `${word_text[letter_map[j][0][k]]}   `;
+            }
+            precalc_phon_html[i] += `   ${fa_long_arrow_right}  `;
+            for (let k in letter_map[j][1]) {
+                precalc_phon_html[i] += `${transcription[letter_map[j][1][k]]}   `;
+            }
+            precalc_phon_html[i] += `</li>`;
         }
         precalc_phon_html[i] += `\n</ol>`;
     }
