@@ -15,7 +15,11 @@ app.logger.setLevel(logging.INFO)
 def main_page():
     input_word_info = session.get('input_word_info', {'word': ''})
     session['input_word_info'] = input_word_info
-    return render_template('index.html', input_word=input_word_info["word"])
+    return render_template(
+        'index.html',
+        page_description="Рыфмач. Рыфмы на беларускай мове, пошук рыфм для вершаў. Рифмы на белорусском языке, поиск рифм для стихотворений.",
+        input_word=input_word_info["word"]
+    )
 
 
 @app.route('/', methods=['POST'])
