@@ -1,3 +1,5 @@
+<link rel="stylesheet" href="{{url_for('static', filename='css/phonetics.css') + '?ver=1.0'}}">
+
 {% extends "index.html" %}
 
 {% block content %}
@@ -6,13 +8,13 @@
             Фанетычны разбор анлайн
         </p>
         <p class="description">
-            Цяпер Рыфмач можа лічыць для Вас транскрыпцыю беларускіх слоў, аналізаваць гукі і фанетычныя з'явы.
+            Цяпер Рыфмач можа будаваць для Вас транскрыпцыі беларускіх слоў, аналізаваць гукі і фанетычныя з'явы.
         </p>
     </div>
 
     {% include "search_panel.html" %}
 
-    <div id="phon-analysis-block" class="rhymes-block">
+    <div id="phon-analysis-block" class="phon-analysis-block">
     </div>
 
     <button class="button-scroll-up bright-button" onclick="scroll_up()">

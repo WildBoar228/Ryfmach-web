@@ -251,7 +251,7 @@ def get_transcription_sounds(word, accent):
             # асіміляцыя па мяккасці
             if (i + 1 < len(t) and
                 (t[i] in ["з", "с"] and is_soft(t[i + 1]) and t[i + 1] not in ["г'", "к'", "х'"] or 
-                 t[i] in ["д", "т", "дз", "ц"] and t[i + 1] == "в'")):
+                 t[i] in ["д", "т", "дз", "ц"] and t[i + 1] in ["ц'", "дз'", "в'"])):
                     t[i] = soft_pair(t[i])
                     changed = True
 

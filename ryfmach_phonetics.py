@@ -111,7 +111,7 @@ def get_transcription_full(word, accent):
             # асіміляцыя па мяккасці
             if (i + 1 < len(t) and
                 (t[i] in ["з", "с"] and is_soft(t[i + 1]) and t[i + 1] not in ["г'", "к'", "х'"] or 
-                 t[i] in ["д", "т", "дз", "ц"] and t[i + 1] == "в'")):
+                 t[i] in ["д", "т", "дз", "ц"] and t[i + 1] in ["ц'", "дз'", "в'"])):
                     phenomena.append((i, t.copy(), PHONETIC_PHENOMENA.SOFT_ASSIMILATION))
                     t[i] = soft_pair(t[i])
                     changed = True
@@ -172,10 +172,12 @@ def word_phonetic_analysis(wdict: dict):
             letter_map.append([[i], letter_to_sounds[i]])
         i += 1
     
-    print(letter_to_sounds)
-    print(letter_map, tr, phenomena)
+    # print(letter_to_sounds)
+    # print(letter_map, tr, phenomena)
     if __name__ == "__main__":
-        print(letter_map, tr, phenomena)
+        # print(letter_map, tr, phenomena)
+        print(tr)
+        print(get_transcription_sounds(wdict["word"], wdict["accent"]))
     
         # for ph in phenomena:
         #     print(ph[2])
@@ -208,7 +210,7 @@ if __name__ == "__main__":
     })
     
     word_phonetic_analysis({
-         "word": "гвоздзь",
+         "word": "плацце",
          "accent": 2,
     })
     

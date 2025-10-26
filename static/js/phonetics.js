@@ -1,6 +1,9 @@
 var alphabet = "-абвгдеёжзійклмнопрстуўфхцчш'ыьэюя";
 var vowels= "аеёіоуыэюя";
 
+var cons_sound_list = ['б', "б'", 'п', "п'", 'в', "в'", 'г', "г'", 'х', "х'", 'г*', "г*'", 'к', "к'", 'д', "дз'", 'т', "ц'", 'дз', 'ц', 'ж', 'ш', 'з', "з'", 'с', "с'", 'й', 'л', "л'", 'м', "м'", 'н', "н'", 'р', 'ф', "ф'", 'дж', 'ч', 'ў'];
+var cons_soft_sound_list = ["б'", "п'", "в'", "г'", "х'", "г*'", "к'", "дз'", "ц'", "з'", "с'", 'й', "л'", "м'", "н'", "ф'"];
+
 var phon_response = [];
 var precalc_phon_html = [];
 
@@ -38,6 +41,25 @@ function is_belarusian(word){
             return false;
     }
     return true;
+}
+
+
+function is_vowel(sound) {
+    if (sound.length == 0) return false;
+    if ("аоуыіэ".includes(sound[0])) {
+        return true;
+    }
+    if (sound.length == 3) {
+        if (sound[0] == "_" && "аоуыіэ".includes(sound[1]) && sound[2] == "_") {
+            return true;
+        }
+    }
+    return false;
+}
+
+
+function is_consonant(sound) {
+    return cons_sound_list.includes(sound);
 }
 
 
@@ -84,6 +106,22 @@ function update_phon(word_variant_index){
 }
 
 
+function add_color_to_sound(s) {
+    let letter_class = "";
+    if (is_vowel(s)) {
+        letter_class = "transcription-vowel";
+        if (s.length > 1 && s[0] == "_") {
+            s = s[1] + "&#769;";
+        }
+    } else if (cons_soft_sound_list.includes(s)) {
+        letter_class = "transcription-cons-soft";
+    } else if (is_consonant(s)) {
+        letter_class = "transcription-cons-hard";
+    }
+    return `<div class="${letter_class}">${s}</div>`;
+}
+
+
 function process_phon_response(data){
     phon_response = data;
     
@@ -112,24 +150,32 @@ function process_phon_response(data){
         const transcription = data.word_variants[i].transcription;
         const phenomena = data.word_variants[i].phenomena;
 
+        precalc_phon_html[i] += `\n<div class="transcription-block">[`;
         for (let j in transcription) {
-            precalc_phon_html[i] += `${transcription[j]} `;
+            precalc_phon_html[i] += add_color_to_sound(transcription[j]);
         }
-
-        precalc_phon_html[i] += `\n<ol>`;
+        precalc_phon_html[i] += `]</div>`;
         
+        precalc_phon_html[i] += `<div class="sound-analysis-block info-text">`;
         for (let j in letter_map) {
-            precalc_phon_html[i] += `<li>`;
+            precalc_phon_html[i] += `<div class="sound-analysis-line">`;
+            precalc_phon_html[i] += `<div class="sound-analysis-group">`;
             for (let k in letter_map[j][0]) {
-                precalc_phon_html[i] += `${word_text[letter_map[j][0][k]]}   `;
+                precalc_phon_html[i] += `<div>${word_text[letter_map[j][0][k]]}</div>   `;
             }
+            precalc_phon_html[i] += `</div>`;
             precalc_phon_html[i] += `   ${fa_long_arrow_right}  `;
+            precalc_phon_html[i] += `<div class="sound-analysis-group">`;
             for (let k in letter_map[j][1]) {
-                precalc_phon_html[i] += `${transcription[letter_map[j][1][k]]}   `;
+                precalc_phon_html[i] += add_color_to_sound(transcription[letter_map[j][1][k]]);
             }
-            precalc_phon_html[i] += `</li>`;
+            if (letter_map[j][1].length == 0) {
+                precalc_phon_html[i] += `&empty;`;
+            }
+            precalc_phon_html[i] += `</div>`;
+            precalc_phon_html[i] += `</div>`;
         }
-        precalc_phon_html[i] += `\n</ol>`;
+        precalc_phon_html[i] += `</div>`;
     }
 
     update_phon(0);
