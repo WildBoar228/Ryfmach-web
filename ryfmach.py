@@ -32,7 +32,7 @@ def get_word_dict(w):
                     (w[2],)
                 ).fetchone()
             except TypeError:
-                word_data["is_initial"] = None
+                word_data["is_initial"] = True
 
     except Exception as exc:
         print(exc)

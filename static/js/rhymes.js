@@ -189,11 +189,12 @@ function post_rhymes_request(){
     console.log(filtered_parts_of_speech);
 
     input_word = search_input_rhyme.value.toLowerCase();
-    input_word = input_word.replaceAll(" ", "");
+    input_word = input_word.replaceAll(" ", "-");
     
     input_word = input_word.replaceAll("и", "і");
     input_word = input_word.replaceAll("щ", "ў");
     input_word = input_word.replaceAll("ъ", "'");
+    console.log(input_word);
 
     accent_index = -1;
 
@@ -286,7 +287,7 @@ function update_filters(){
     search_mistake = parseInt($("#search-mistake-radio :input:radio:checked").val());
     sort_mode = $("#sort-mode-radio :input:radio:checked").val();
 
-    new_input = search_input_rhyme.value.toLowerCase().replaceAll(" ", "").replaceAll("и", "і").replaceAll("щ", "ў").replaceAll("ъ", "'");
+    new_input = search_input_rhyme.value.toLowerCase().replaceAll(" ", "-").replaceAll("и", "і").replaceAll("щ", "ў").replaceAll("ъ", "'");
     if (new_input != input_word){
         input_word = new_input;
         accent_index = -1;
