@@ -37,6 +37,13 @@
     justify-content: flex-start;
     gap: 10pt;
     align-items: center;
+    width: 80%;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.sound-analysis-line.line1 {
+    background-color: #f2f2f2;
 }
 
 .sound-analysis-group {

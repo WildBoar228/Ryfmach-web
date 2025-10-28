@@ -1,3 +1,9 @@
+:root {
+    --primary-color: rgb(255, 224, 46);
+    --light-primary-color: rgb(255, 240, 154);
+    --dark-primary-color: rgb(223, 189, 0);
+}
+
 .main-logo{
     margin: 5vh auto 0px auto;
     display: flex;
@@ -88,7 +94,7 @@
     height: 30pt;
     border-radius: 15pt;
     padding: 0 10px 0 10px;
-    background-color: rgb(255, 224, 46);
+    background-color: var(--primary-color);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -124,7 +130,7 @@
 }
 
 .button-search:hover{
-    background-color: rgb(255, 240, 154);
+    background-color: var(--light-primary-color);
     border-color: gray;
     transition: 300ms cubic-bezier(0.075, 0.82, 0.165, 1) 0s;
 }
@@ -254,7 +260,7 @@
 }
 
 .add-word-form{
-    background-color: rgb(255, 224, 46);
+    background-color: var(--primary-color);
     width: 60vw;
     border-radius: 20px;
     padding: 30px;
@@ -268,7 +274,7 @@
 }
 
 .yellow-checkbox{
-    accent-color: rgb(255, 224, 46);
+    accent-color: var(--primary-color);
     width: 1em;
     height: 1em;
     border-radius: .25em;

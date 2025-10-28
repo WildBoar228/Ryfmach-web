@@ -17,6 +17,42 @@ class PHONETIC_PHENOMENA:
     DENTAL_ASSIMILATION = 8
 
 
+sound_description = {}
+
+for v in vowel_sound_list:
+    sound_description[v] = "галосны, ненаціскны"
+    sound_description[accent_pair(v)] = "галосны, націскны"
+
+for c in cons_sound_list:
+    sound_description[c] = "зычны, "
+
+    if is_ring(c):
+        sound_description[c] += "звонкі "
+        if thud_pair(c):
+            sound_description[c] += f"парны [{thud_pair(c)}], "
+        else:
+            sound_description[c] += "няпарны, "
+    elif is_thud(c):
+        sound_description[c] += "глухі "
+        if ring_pair(c):
+            sound_description[c] += f"парны [{ring_pair(c)}], "
+        else:
+            sound_description[c] += "няпарны, "
+            
+    if is_soft(c):
+        sound_description[c] += "мяккі "
+        if hard_pair(c):
+            sound_description[c] += f"парны [{hard_pair(c)}]"
+        else:
+            sound_description[c] += "няпарны"
+    elif is_hard(c):
+        sound_description[c] += "цвёрды "
+        if soft_pair(c):
+            sound_description[c] += f"парны [{soft_pair(c)}]"
+        else:
+            sound_description[c] += "няпарны"
+
+
 def get_transcription_full(word, accent):
     letter_to_sounds = [[] for _ in range(len(word))]
     t = []
@@ -171,11 +207,10 @@ def word_phonetic_analysis(wdict: dict):
         else:
             letter_map.append([[i], letter_to_sounds[i]])
         i += 1
+
+    sound_analysis = [sound_description[s] for s in tr]
     
-    # print(letter_to_sounds)
-    # print(letter_map, tr, phenomena)
     if __name__ == "__main__":
-        # print(letter_map, tr, phenomena)
         print(tr)
         print(get_transcription_sounds(wdict["word"], wdict["accent"]))
     
@@ -194,7 +229,8 @@ def word_phonetic_analysis(wdict: dict):
          "word_variant": wdict,
          "letter_map": letter_map,
          "transcription": tr,
-         "phenomena": phenomena
+         "phenomena": phenomena,
+         "sound_analysis": sound_analysis,
     }
 
 

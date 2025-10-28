@@ -1,8 +1,8 @@
 var alphabet = "-абвгдеёжзійклмнопрстуўфхцчш'ыьэюя";
 var vowels= "аеёіоуыэюя";
 
-var cons_sound_list = ['б', "б'", 'п', "п'", 'в', "в'", 'г', "г'", 'х', "х'", 'г*', "г*'", 'к', "к'", 'д', "дз'", 'т', "ц'", 'дз', 'ц', 'ж', 'ш', 'з', "з'", 'с', "с'", 'й', 'л', "л'", 'м', "м'", 'н', "н'", 'р', 'ф', "ф'", 'дж', 'ч', 'ў'];
-var cons_soft_sound_list = ["б'", "п'", "в'", "г'", "х'", "г*'", "к'", "дз'", "ц'", "з'", "с'", 'й', "л'", "м'", "н'", "ф'"];
+var cons_sound_list = ['б', "б'", 'п', "п'", 'в', "в'", 'г', "г'", 'х', "х'", 'ґ', "ґ'", 'к', "к'", 'д', "дз'", 'т', "ц'", 'дз', 'ц', 'ж', 'ш', 'з', "з'", 'с', "с'", 'й', 'л', "л'", 'м', "м'", 'н', "н'", 'р', 'ф', "ф'", 'дж', 'ч', 'ў'];
+var cons_soft_sound_list = ["б'", "п'", "в'", "г'", "х'", "ґ'", "к'", "дз'", "ц'", "з'", "с'", 'й', "л'", "м'", "н'", "ф'"];
 
 var phon_response = [];
 var precalc_phon_html = [];
@@ -106,7 +106,8 @@ function update_phon(word_variant_index){
 }
 
 
-function add_color_to_sound(s) {
+function add_color_to_sound(s, tag_name="div") {
+    s = s.replaceAll("г*", "ґ");
     let letter_class = "";
     if (is_vowel(s)) {
         letter_class = "transcription-vowel";
@@ -118,7 +119,27 @@ function add_color_to_sound(s) {
     } else if (is_consonant(s)) {
         letter_class = "transcription-cons-hard";
     }
-    return `<div class="${letter_class}">${s}</div>`;
+    return `<${tag_name} class="${letter_class}">${s}</${tag_name}>`;
+}
+
+
+function highlight_sounds(s) {
+    let sound_start_index = s.length;
+    let result_s = "";
+    for (let i = 0; i < s.length; ++i) {
+        if (s[i] == '[') {
+            sound_start_index = i + 1;
+            result_s += "[";
+        } else if (s[i] == ']') {
+            result_s += `${add_color_to_sound(s.slice(sound_start_index, i), tag_name="span")}`;
+            sound_start_index = s.length;
+        }
+        if (sound_start_index == s.length) {
+            result_s += s[i];
+        }
+    }
+    
+    return result_s;
 }
 
 
@@ -149,6 +170,7 @@ function process_phon_response(data){
         const letter_map = data.word_variants[i].letter_map;
         const transcription = data.word_variants[i].transcription;
         const phenomena = data.word_variants[i].phenomena;
+        const sound_descr = data.word_variants[i].sound_analysis;
 
         precalc_phon_html[i] += `\n<div class="transcription-block">[`;
         for (let j in transcription) {
@@ -158,16 +180,19 @@ function process_phon_response(data){
         
         precalc_phon_html[i] += `<div class="sound-analysis-block info-text">`;
         for (let j in letter_map) {
-            precalc_phon_html[i] += `<div class="sound-analysis-line">`;
-            precalc_phon_html[i] += `<div class="sound-analysis-group">`;
+            precalc_phon_html[i] += `<div class="sound-analysis-line line${j % 2}">`;
+            precalc_phon_html[i] += `<div class="sound-analysis-group" style="font-weight: bold">`;
             for (let k in letter_map[j][0]) {
                 precalc_phon_html[i] += `<div>${word_text[letter_map[j][0][k]]}</div>   `;
             }
             precalc_phon_html[i] += `</div>`;
             precalc_phon_html[i] += `   ${fa_long_arrow_right}  `;
-            precalc_phon_html[i] += `<div class="sound-analysis-group">`;
+            precalc_phon_html[i] += `<div class="sound-analysis-group" style="width: fit-content">`;
             for (let k in letter_map[j][1]) {
-                precalc_phon_html[i] += add_color_to_sound(transcription[letter_map[j][1][k]]);
+                precalc_phon_html[i] += `<div>`;
+                precalc_phon_html[i] += add_color_to_sound(transcription[letter_map[j][1][k]], tag_name="span");
+                precalc_phon_html[i] += `  &ndash;  ${highlight_sounds(sound_descr[letter_map[j][1][k]])}`;
+                precalc_phon_html[i] += "</div>";
             }
             if (letter_map[j][1].length == 0) {
                 precalc_phon_html[i] += `&empty;`;

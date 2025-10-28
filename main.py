@@ -13,8 +13,8 @@ app.logger.setLevel(logging.INFO)
 
 @app.route('/')
 def rhyme_page():
-    input_word_info = session.get('input_word_info', {'word': ''})
-    session['input_word_info'] = input_word_info
+    input_word_info = session.get('rhyme_input_word_info', {'word': ''})
+    session['rhyme_input_word_info'] = input_word_info
     return render_template(
         'rhyme_page.html',
         title="Рыфмач&nbsp;&ndash; падабраць рыфму",
@@ -27,7 +27,7 @@ def rhyme_page():
 def update_rhymes():
     input_word_info = request.json
     if input_word_info.get('word') is None:
-        session['input_word_info'] = {'word': ''}
+        session['rhyme_input_word_info'] = {'word': ''}
         return jsonify(rhymes_list=[], word_found=False)
 
     start_time = time.time()
@@ -40,14 +40,14 @@ def update_rhymes():
 
     print(f"{str(request.remote_addr)} Response time: {int((time.time() - start_time) * 1000)} ms")
 
-    session['input_word_info'] = input_word_info
+    session['rhyme_input_word_info'] = input_word_info
     return jsonify(rhymes_list=rhymes, word_found=word_found)
 
 
 @app.route('/phonetics')
 def phonetics_page():
-    input_word_info = session.get('input_word_info', {'word': ''})
-    session['input_word_info'] = input_word_info
+    input_word_info = session.get('phon_input_word_info', {'word': ''})
+    session['phon_input_word_info'] = input_word_info
     return render_template(
         'phonetics_page.html',
         title="Рыфмач&nbsp;&ndash; фанетычны разбор",
@@ -60,7 +60,7 @@ def phonetics_page():
 def phonetic_analysis():
     input_word_info = request.json
     if input_word_info.get('word') is None:
-        session['input_word_info'] = {'word': ''}
+        session['phon_input_word_info'] = {'word': ''}
         return jsonify(phon_analys=[], word_found=False)
 
     start_time = time.time()
@@ -71,7 +71,7 @@ def phonetic_analysis():
 
     print(f"{str(request.remote_addr)} Response time: {int((time.time() - start_time) * 1000)} ms")
 
-    session['input_word_info'] = input_word_info
+    session['phon_input_word_info'] = input_word_info
     return jsonify(word_variants=analysed, word_found=word_found)
 
 

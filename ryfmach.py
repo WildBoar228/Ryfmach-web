@@ -22,6 +22,7 @@ def get_word_dict(w):
                             WHERE id == ?''',
                             (w[3], )).fetchone()[0]
         word_data["part_of_speech"] = posp
+        
         if w[2] == w[0]:
             word_data["is_initial"] = True
         else:
@@ -32,7 +33,8 @@ def get_word_dict(w):
                     (w[2],)
                 ).fetchone()
             except TypeError:
-                word_data["is_initial"] = None
+                print(f"not found initial of {word_data["word"]}, initial index is {w[2]}")
+                word_data["is_initial"] = True
 
     except Exception as exc:
         print(exc)
@@ -437,6 +439,8 @@ db_lock = threading.Lock()
 
 
 if __name__ == "__main__":
+    pprint(get_word_data_from_db("пакецікі"))
+
     tests = []
 
     # import random
@@ -481,10 +485,10 @@ if __name__ == "__main__":
          ("бусел", 1),
          ("вузел", 1),]
 
-    for i, test in enumerate(tests):
-        print(f'{i}  {test[0]}:    {' '.join(get_transcription_sounds(*test))}')
-        for j in range(4):
-            print(f'{get_working_part(*test, mistake=j)} {get_sound_hash(*test, mistake=j)}')
-        print()
+    # for i, test in enumerate(tests):
+    #     print(f'{i}  {test[0]}:    {' '.join(get_transcription_sounds(*test))}')
+    #     for j in range(4):
+    #         print(f'{get_working_part(*test, mistake=j)} {get_sound_hash(*test, mistake=j)}')
+    #     print()
 
     con.close()
