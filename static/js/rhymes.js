@@ -5,7 +5,7 @@ var rhymes_response = [];
 var precalc_rhymes_html = [];
 var precalc_rhymes_count = [];
 
-var input_word;
+var w;
 var accent_index = -1;
 var filtered_parts_of_speech = [1, 1, 1, 1, 1, 1, 1];
 var filtered_only_initial = false;
@@ -138,7 +138,7 @@ function generate_letter_buttons(){
     accent_index = -1;
     search_status_info.innerHTML = `<div class="alert alert-warning info-text" role="alert">Невядомае слова</div>`
 
-    let word = input_word;
+    let word = w;
 
     if (!word_contains_vowels(word)){
         search_status_info.innerHTML = `<div class="alert alert-danger info-text" role="alert">У гэтым слове няма галосных</div>`;
@@ -178,6 +178,26 @@ function letter_button_onclick(index){
 }
 
 
+function clean_input_word(w) {
+    w = w.toLowerCase();
+    let pref = 0;
+    while (pref < w.length && w[pref] == ' ') {
+        ++pref;
+    }
+    let suf = w.length - 1;
+    while (suf >= 0 && w[suf] == ' ') {
+        --suf;
+    }
+    w = w.slice(pref, suf + 1);
+    w = w.replaceAll(" ", "-");
+    w = w.replaceAll("и", "і");
+    w = w.replaceAll("i", "і"); // english i
+    w = w.replaceAll("щ", "ў");
+    w = w.replaceAll("ъ", "'");
+    return w;
+}
+
+
 function post_rhymes_request(){
     for (i = 1; i <= 7; ++i){
         filtered_parts_of_speech[i - 1] = document.getElementById(`check-posp-${i}`).checked;
@@ -186,29 +206,22 @@ function post_rhymes_request(){
     search_mistake = parseInt($("#search-mistake-radio :input:radio:checked").val());
     sort_mode = $("#sort-mode-radio :input:radio:checked").val();
 
-    console.log(filtered_parts_of_speech);
-
-    input_word = search_input_rhyme.value.toLowerCase();
-    input_word = input_word.replaceAll(" ", "-");
-    
-    input_word = input_word.replaceAll("и", "і");
-    input_word = input_word.replaceAll("щ", "ў");
-    input_word = input_word.replaceAll("ъ", "'");
-    console.log(input_word);
+    w = clean_input_word(search_input_rhyme.value);
+    console.log(w);
 
     accent_index = -1;
 
-    if (input_word == ""){
+    if (w == ""){
         word_variants_block.style.visibility = "visible";
         return;
     }
 
-    if (!is_belarusian(input_word)){        
+    if (!is_belarusian(w)){        
         search_status_info.innerHTML = `<div class="alert alert-danger info-text" role="alert">Слова павінна складацца толькі з беларускіх літар!</div>`;
         return;
     }
 
-    if (input_word.length > 40){        
+    if (w.length > 40){        
         search_status_info.innerHTML = `<div class="alert alert-danger info-text" role="alert">Нельга ўводзіць словы даўжэй за 40 літар! </div>`;
         return;
     }
@@ -223,7 +236,7 @@ function post_rhymes_request(){
         dataType: "json",
         contentType: "application/json",
         data: JSON.stringify({
-            "word": input_word,
+            "word": w,
             "filtered_posp": filtered_parts_of_speech,
             "only_initial": filtered_only_initial,
             "search_mistake": search_mistake,
@@ -235,17 +248,17 @@ function post_rhymes_request(){
 
 
 function post_rhymes_with_manual_accent(){
-    if (input_word == ""){
+    if (w == ""){
         word_variants_block.style.visibility = "visible";
         return;
     }
 
-    if (!is_belarusian(input_word)){        
+    if (!is_belarusian(w)){        
         search_status_info.innerHTML = `<div class="alert alert-danger info-text" role="alert">Слова павінна складацца толькі з беларускіх літар!</div>`;
         return;
     }
 
-    if (input_word.length > 40){        
+    if (w.length > 40){        
         search_status_info.innerHTML = `<div class="alert alert-danger info-text" role="alert">Нельга ўводзіць словы даўжэй за 40 літар! </div>`;
         return;
     }
@@ -267,7 +280,7 @@ function post_rhymes_with_manual_accent(){
         dataType: "json",
         contentType: "application/json",
         data: JSON.stringify({
-            "word": input_word,
+            "word": w,
             "accent": accent_index,
             "filtered_posp": filtered_parts_of_speech,
             "only_initial": filtered_only_initial,
@@ -287,13 +300,13 @@ function update_filters(){
     search_mistake = parseInt($("#search-mistake-radio :input:radio:checked").val());
     sort_mode = $("#sort-mode-radio :input:radio:checked").val();
 
-    new_input = search_input_rhyme.value.toLowerCase().replaceAll(" ", "-").replaceAll("и", "і").replaceAll("щ", "ў").replaceAll("ъ", "'");
-    if (new_input != input_word){
-        input_word = new_input;
+    new_input = clean_input_word(search_input_rhyme.value);
+    if (new_input != w){
+        w = new_input;
         accent_index = -1;
     }
 
-    if (input_word == "" || !is_belarusian(input_word) || input_word.length > 40)
+    if (w == "" || !is_belarusian(w) || w.length > 40)
         return;
 
     search_status_info.innerHTML = "";
@@ -307,7 +320,7 @@ function update_filters(){
             dataType: "json",
             contentType: "application/json",
             data: JSON.stringify({
-                "word": input_word,
+                "word": w,
                 "filtered_posp": filtered_parts_of_speech,
                 "only_initial": filtered_only_initial,
                 "search_mistake": search_mistake,
@@ -323,7 +336,7 @@ function update_filters(){
             dataType: "json",
             contentType: "application/json",
             data: JSON.stringify({
-                "word": input_word,
+                "word": w,
                 "accent": accent_index,
                 "filtered_posp": filtered_parts_of_speech,
                 "only_initial": filtered_only_initial,
