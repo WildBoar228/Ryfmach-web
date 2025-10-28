@@ -4,8 +4,14 @@
     --dark-primary-color: rgb(223, 189, 0);
 }
 
+.main-navbar {
+    display: flex;
+    justify-content: right;
+    padding: 20px;
+}
+
 .main-logo{
-    margin: 5vh auto 0px auto;
+    margin: 0vh auto 0px auto;
     display: flex;
     align-items: center;
     width: 50vmin;
@@ -147,6 +153,23 @@
     background-color: rgb(226, 226, 226);
     border-color: gray;
     transition: 300ms cubic-bezier(0.075, 0.82, 0.165, 1) 0s;
+}
+
+.nav-button {
+    background-color: #fff;
+    border-width: 0px;
+    color: gray;
+    font-size: 20pt;
+    aspect-ratio: 1;
+}
+
+.nav-links-box {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    width: 80vw;
+    max-width: 300px;
+    gap: 10pt;
 }
 
 .rhymes-block{
@@ -404,5 +427,9 @@
         height: 7vw;
         border-radius: 2vw;
         font: normal 4vw Arial, sans-serif;
+    }
+
+    .nav-links-box {
+        margin: auto;
     }
 }

@@ -11,24 +11,24 @@
     <title>{{ title|safe }}</title>
 </head>
 <body>
-    <nav class="nav navbar">
-        <button type="button" class="modest-button" data-bs-toggle="offcanvas" data-bs-target="#links-offcanvas" aria-controls="links-offcanvas">
-            <i id="filters-icon" class="fa fa-cog" width="30pt"></i>
+    <nav class="main-navbar">
+        <button type="button" class="nav-button" data-bs-toggle="offcanvas" data-bs-target="#links-offcanvas" aria-controls="links-offcanvas">
+            <i id="filters-icon" class="fa fa-bars"></i>
         </button>
     </nav>
     <img src="{{ url_for('static', filename='img/logo.png') }}" class="main-logo">
 
     {% block content %}{% endblock %}
     
-    <div class="offcanvas offcanvas-start" tabindex="-1" id="links-offcanvas" aria-labelledby="links-offcanvasExampleLabel">
+    <div class="offcanvas offcanvas-top" data-bs-scroll="true" tabindex="-1" id="links-offcanvas" aria-labelledby="links-offcanvasExampleLabel">
         <div class="offcanvas-header">
-            <h5 class="offcanvas-title" id="links-offcanvasExampleLabel">Спасылкі</h5>
+            <h2 class="offcanvas-title" id="links-offcanvasExampleLabel">Спасылкі</h2>
             <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body">
-            <div>
-                <div><a href="/" style="color: var(--dark-primary-color)">Пошук рыфмаў</a></div>
-                <div><a href="/phonetics" style="color: var(--dark-primary-color)">Фанетычны разбор</a></div>
+            <div class="nav-links-box">
+                <button class="modest-button" onclick="window.location.href='/';">Пошук рыфмаў</button>
+                <button class="modest-button" onclick="window.location.href='/phonetics';">Фанетычны разбор</button>
             </div>
         </div>
     </div>
