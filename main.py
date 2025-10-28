@@ -18,7 +18,8 @@ def main_page():
     return render_template(
         'index.html',
         page_description="Рыфмач. Рыфмы на беларускай мове, пошук рыфм для вершаў. Рифмы на белорусском языке, поиск рифм для стихотворений.",
-        input_word=input_word_info["word"]
+        input_word=input_word_info["word"],
+        canonical_url="https://ryfmach.online"
     )
 
 
