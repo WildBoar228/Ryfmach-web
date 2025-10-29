@@ -8,6 +8,7 @@
     display: flex;
     width: 100%;
     justify-content: center;
+    flex-wrap: wrap;
     padding: 5vh 10vw 5vh 10vw;
     gap: 10pt;
     font: bold 16pt Arial, sans-serif;

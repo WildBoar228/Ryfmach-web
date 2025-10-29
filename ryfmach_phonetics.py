@@ -191,8 +191,8 @@ def input_phonetic_analysis(input_word_info):
     analysed = []
     for wv in word_variants:
         analysed.append(word_phonetic_analysis(wv))
+        print(' '.join(analysed[-1]["transcription"]))
         
-    pprint(analysed)
     return analysed
 
 

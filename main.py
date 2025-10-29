@@ -48,8 +48,8 @@ def update_rhymes():
 
 @app.route('/phonetics')
 def phonetics_page():
-    input_word_info = session.get('phon_input_word_info', {'word': ''})
-    session['phon_input_word_info'] = input_word_info
+    input_word_info = {'word': ''} # session.get('phon_input_word_info', {'word': ''})
+    # session['phon_input_word_info'] = input_word_info
     return render_template(
         'phonetics_page.html',
         title="Рыфмач&nbsp;&ndash; фанетычны разбор",
@@ -64,18 +64,18 @@ def phonetics_page():
 def phonetic_analysis():
     input_word_info = request.json
     if input_word_info.get('word') is None:
-        session['phon_input_word_info'] = {'word': ''}
+        # session['phon_input_word_info'] = {'word': ''}
         return jsonify(phon_analys=[], word_found=False)
 
     start_time = time.time()
-    app.logger.info("%s Request rhyme: %s", str(request.remote_addr), str(input_word_info))
+    app.logger.info("%s Request phonetics: %s", str(request.remote_addr), str(input_word_info))
 
     analysed = ryfmach_phonetics.input_phonetic_analysis(input_word_info)
     word_found = len(analysed) > 0
 
     print(f"{str(request.remote_addr)} Response time: {int((time.time() - start_time) * 1000)} ms")
 
-    session['phon_input_word_info'] = input_word_info
+    # session['phon_input_word_info'] = input_word_info
     return jsonify(word_variants=analysed, word_found=word_found)
 
 
