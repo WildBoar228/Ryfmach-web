@@ -189,9 +189,9 @@ def accent_pair(sound):
 def non_accent_pair(sound):
     if len(sound) >= 3 and sound[0] == sound[-1] == "_":
         return sound[1:-1] if sound[1:-1] in vowel_sound_list else None
+    
 
-
-def get_transcription(word, accent):
+def get_transcription_sounds(word, accent):
     t = []
     for i in range(len(word)):        
         if word[i] in "аоуыэі":
@@ -251,7 +251,7 @@ def get_transcription(word, accent):
             # асіміляцыя па мяккасці
             if (i + 1 < len(t) and
                 (t[i] in ["з", "с"] and is_soft(t[i + 1]) and t[i + 1] not in ["г'", "к'", "х'"] or 
-                 t[i] in ["д", "т", "дз", "ц"] and t[i + 1] == "в'")):
+                 t[i] in ["д", "т", "дз", "ц"] and t[i + 1] in ["ц'", "дз'", "в'"])):
                     t[i] = soft_pair(t[i])
                     changed = True
 

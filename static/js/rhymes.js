@@ -12,7 +12,8 @@ var filtered_only_initial = false;
 var search_mistake = -1;
 var sort_mode = "quality";
 
-const search_input_rhyme = document.getElementById("search-input-rhyme");
+const search_input_rhyme = document.getElementById("search-input");
+const search_button_rhyme = document.getElementById("search-button");
 const search_icon = document.getElementById("search-icon");
 const search_spinner = document.getElementById("search-spinner");
 const search_status_text = document.getElementById("search-status-text");
@@ -29,6 +30,10 @@ const manual_accent_modal = new bootstrap.Modal(document.getElementById('manual-
 const letter_buttons_block = document.getElementById("letter-buttons-block");
 
 const fa_long_arrow_left = `<i class="fa fa-long-arrow-left" aria-hidden="true"></i>`
+
+window.onload = () => {
+    search_button_rhyme.onclick = post_rhymes_request;
+}
 
 
 function is_belarusian(word){
