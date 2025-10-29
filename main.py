@@ -85,5 +85,11 @@ def favicon():
                                'favicon.ico', mimetype='image/x-icon')
 
 
+@app.route('/sitemap')
+def sitemap():
+    return send_from_directory(os.path.join(app.root_path, 'static'),
+                               'sitemap.xml', mimetype='application/xml')
+
+
 if __name__ == '__main__':
     app.run(port=8080, host='127.0.0.1')
