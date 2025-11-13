@@ -79,25 +79,28 @@ def get_transcription_full(word, accent):
 
 
     for i in range(len(word)):
-        if word[i] in vowels and not word[i] in "аоуыэі":
+        if word[i] in vowels and not word[i] in "аоуыэ":
             # ётацыя
-            if (i == 0 or
-                word[i - 1] in vowels or
-                word[i - 1] == "ў" or
-                word[i - 1] == "ь" or
-                word[i - 1] == "'" or
-                word[i - 1] == "-"):
-                    sound_i = letter_to_sounds[i][0]
-                    phenomena.append((sound_i, t.copy(), PHONETIC_PHENOMENA.IOTATION))
-                    t.insert(sound_i, "й")
+            if (word[i] != "і" and (i == 0 or
+                                    word[i - 1] in vowels or
+                                    word[i - 1] == "ў" or
+                                    word[i - 1] == "ь" or
+                                    word[i - 1] == "'" or
+                                    word[i - 1] == "-")
+                or word[i] == "і" and i > 0 and (word[i - 1] == "ў" or
+                                                word[i - 1] == "ь" or
+                                                word[i - 1] == "'")):
+                        sound_i = letter_to_sounds[i][0]
+                        phenomena.append((sound_i, t.copy(), PHONETIC_PHENOMENA.IOTATION))
+                        t.insert(sound_i, "й")
 
-                    # for j in range(len(phenomena)):
-                    #     if phenomena[j][0] >= sound_i:
-                    #         phenomena[j] = (phenomena[j][0] + 1, *phenomena[j][1:])
-                    for j in range(len(letter_to_sounds)):
-                        letter_to_sounds[j] = [s if s < sound_i else s + 1 for s in letter_to_sounds[j]]
-                        if letter_to_sounds[j] and letter_to_sounds[j][0] == sound_i + 1:
-                             letter_to_sounds[j].insert(0, sound_i)
+                        # for j in range(len(phenomena)):
+                        #     if phenomena[j][0] >= sound_i:
+                        #         phenomena[j] = (phenomena[j][0] + 1, *phenomena[j][1:])
+                        for j in range(len(letter_to_sounds)):
+                            letter_to_sounds[j] = [s if s < sound_i else s + 1 for s in letter_to_sounds[j]]
+                            if letter_to_sounds[j] and letter_to_sounds[j][0] == sound_i + 1:
+                                letter_to_sounds[j].insert(0, sound_i)
 
         elif word[i] in consonants:
             sound_i = letter_to_sounds[i][-1]
@@ -252,5 +255,25 @@ if __name__ == "__main__":
     
     word_phonetic_analysis({
          "word": "нарэшце",
+         "accent": 3,
+    })
+    
+    word_phonetic_analysis({
+         "word": "вераб'і",
+         "accent": 6,
+    })
+    
+    word_phonetic_analysis({
+         "word": "ільі",
+         "accent": 3,
+    })
+    
+    word_phonetic_analysis({
+         "word": "салаўі",
+         "accent": 5,
+    })
+    
+    word_phonetic_analysis({
+         "word": "нагі",
          "accent": 3,
     })
