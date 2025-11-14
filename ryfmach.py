@@ -33,7 +33,7 @@ def get_word_dict(w):
                     (w[2],)
                 ).fetchone()
             except TypeError:
-                print(f"not found initial of {word_data["word"]}, initial index is {w[2]}")
+                # print(f"not found initial of {word_data["word"]}, initial index is {w[2]}")
                 word_data["is_initial"] = True
 
     except Exception as exc:
