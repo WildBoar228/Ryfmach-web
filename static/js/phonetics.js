@@ -251,14 +251,28 @@ function letter_button_onclick(index){
 }
 
 
-function post_phon_request(){
-    input_word = search_input_phon.value.toLowerCase();
-    input_word = input_word.replaceAll(" ", "");
-    
-    input_word = input_word.replaceAll("и", "і");
-    input_word = input_word.replaceAll("щ", "ў");
-    input_word = input_word.replaceAll("ъ", "'");
+function clean_input_word(w) {
+    w = w.toLowerCase();
+    let pref = 0;
+    while (pref < w.length && w[pref] == ' ') {
+        ++pref;
+    }
+    let suf = w.length - 1;
+    while (suf >= 0 && w[suf] == ' ') {
+        --suf;
+    }
+    w = w.slice(pref, suf + 1);
+    w = w.replaceAll(" ", "-");
+    w = w.replaceAll("и", "і");
+    w = w.replaceAll("i", "і"); // english i
+    w = w.replaceAll("щ", "ў");
+    w = w.replaceAll("ъ", "'");
+    return w;
+}
 
+
+function post_phon_request(){
+    input_word = clean_input_word(search_input_phon.value);
     accent_index = -1;
 
     if (input_word == ""){

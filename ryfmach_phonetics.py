@@ -87,9 +87,10 @@ def get_transcription_full(word, accent):
                                     word[i - 1] == "ь" or
                                     word[i - 1] == "'" or
                                     word[i - 1] == "-")
-                or word[i] == "і" and i > 0 and (word[i - 1] == "ў" or
-                                                word[i - 1] == "ь" or
-                                                word[i - 1] == "'")):
+                or word[i] == "і" and i > 0 and (#word[i - 1] in vowels or
+                                                 word[i - 1] == "ў" or
+                                                 word[i - 1] == "ь" or
+                                                 word[i - 1] == "'")):
                         sound_i = letter_to_sounds[i][0]
                         phenomena.append((sound_i, t.copy(), PHONETIC_PHENOMENA.IOTATION))
                         t.insert(sound_i, "й")
@@ -151,6 +152,11 @@ def get_transcription_full(word, accent):
             if (i + 1 < len(t) and
                 (t[i] in ["з", "с"] and is_soft(t[i + 1]) and t[i + 1] not in ["г'", "к'", "х'"] or 
                  t[i] in ["д", "т", "дз", "ц"] and t[i + 1] in ["ц'", "дз'", "в'"])):
+                    phenomena.append((i, t.copy(), PHONETIC_PHENOMENA.SOFT_ASSIMILATION))
+                    t[i] = soft_pair(t[i])
+                    changed = True
+            if (i + 1 < len(t) and
+                is_hard(t[i]) and t[i + 1] == soft_pair(t[i])):
                     phenomena.append((i, t.copy(), PHONETIC_PHENOMENA.SOFT_ASSIMILATION))
                     t[i] = soft_pair(t[i])
                     changed = True

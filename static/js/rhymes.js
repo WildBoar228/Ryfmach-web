@@ -212,7 +212,6 @@ function post_rhymes_request(){
     sort_mode = $("#sort-mode-radio :input:radio:checked").val();
 
     w = clean_input_word(search_input_rhyme.value);
-    console.log(w);
 
     accent_index = -1;
 
