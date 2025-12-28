@@ -432,7 +432,7 @@ def rhymes_text_list(input_word_info):
     return rhymes
 
 
-con = sqlite3.connect('db/Slounik3.db', check_same_thread=False)
+con = sqlite3.connect('db/Slounik4.db', check_same_thread=False)
 cur = con.cursor()
 
 db_lock = threading.Lock()
