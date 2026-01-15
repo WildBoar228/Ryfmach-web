@@ -352,7 +352,8 @@ def find_rhymes(input_word: str,
                     old_size = len(rhymes)
                     rhymes1 = find_rhymes(input_word, input_accent, filtered_posp,
                                           only_initial, mst, cnt_limit=cnt_limit // 2,
-                                          words_sort_key=words_sort_key)
+                                          words_sort_key=words_sort_key,
+                                          debug_output=debug_output)
                     
                     rhymes += rhymes1
     
@@ -397,28 +398,44 @@ def find_rhymes(input_word: str,
     return rhymes
 
 
-def rhymes_text_list(input_word_info):
-    input_word_info["word"] = input_word_info["word"].replace("и", "і")
-    input_word_info["word"] = input_word_info["word"].replace("щ", "ў")
-    input_word_info["word"] = input_word_info["word"].replace("ъ", "'")
+def print_best_rhymes(input_word, rhyme_list, k=5):
+    output = "Best rhymes to " + sounds.language.add_accent(
+        input_word["word"],
+        input_word["accent"]
+    ) + ":   "
 
-    if not is_belarusian(input_word_info["word"]) or len(input_word_info["word"]) > 40:
-        return []
-    if input_word_info.get("accent") is None:
-        input_word_data = get_word_data_from_db(input_word_info["word"].lower(),
-                                        fix_similar_letters=True)
-    else:
-        input_word_data = [input_word_info]
+    best_rhymes = rhyme_list[:k] if len(rhyme_list) > k else rhyme_list
+    for i, rhyme in enumerate(best_rhymes):
+        penalty = sounds.get_rhyme_penalty(
+            input_word["word"], input_word["accent"],
+            rhyme["word"], rhyme["accent"]
+        )
+        penalty = round(penalty)
+        output += f"{sounds.language.add_accent(rhyme["word"], rhyme["accent"])} ({penalty}),  "
     
-    filtered_posp = input_word_info.get("filtered_posp", [True] * 7)
-    only_initial = input_word_info.get("only_initial", False)
-    mistake = input_word_info.get("search_mistake", 0)
+    print(output)
+
+
+def rhymes_text_list(input_word_request):
+    input_word_request["word"] = clean_input_word(input_word_request["word"])
+
+    if not is_belarusian(input_word_request["word"]) or len(input_word_request["word"]) > 40:
+        return []
+    if input_word_request.get("accent") is None:
+        input_word_data = get_word_data_from_db(input_word_request["word"].lower(),
+                                                fix_similar_letters=True)
+    else:
+        input_word_data = [input_word_request]
+    
+    filtered_posp = input_word_request.get("filtered_posp", [True] * 7)
+    only_initial = input_word_request.get("only_initial", False)
+    mistake = input_word_request.get("search_mistake", 0)
 
     rhymes = []
     for i in range(len(input_word_data)):
-        if input_word_info["sort_mode"] == "alphabet":
+        if input_word_request["sort_mode"] == "alphabet":
             sort_func = alphabet_sort_words_key
-        elif input_word_info["sort_mode"] == "quality":
+        elif input_word_request["sort_mode"] == "quality":
             sort_func = quality_sort_words_key(input_word_data[i])
 
         rhymes.append({"word_variant": input_word_data[i],
@@ -428,6 +445,9 @@ def rhymes_text_list(input_word_info):
                                                   only_initial=only_initial,
                                                   mistake=mistake,
                                                   words_sort_key=sort_func)})
+    
+    for i in range(len(rhymes)):
+        print_best_rhymes(rhymes[i]["word_variant"], rhymes[i]["rhymes_data"])
     
     return rhymes
 

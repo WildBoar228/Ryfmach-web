@@ -283,10 +283,27 @@ def get_accent_in_transcription(tr):
     return -1
 
 
-similar = {'э': 'е',
-           'я': 'а',
-           'ё': 'о',
-           'ю': 'у'}
+def clear_punctuation(s: str):
+    s = s.lower()
+    for c in '.,:!?;()«»':
+        s = s.replace(c, '')
+    s = s.split()
+    for i in range(len(s)):
+        if not is_belarusian(s[i]) or s[i] == '-':
+            s[i] = ''
+
+    s = ' '.join(s)
+
+    return s
+
+
+def clean_input_word(word):
+    word = word.replace("и", "і")
+    word = word.replace("i", "і") # English i to Belarusian
+    word = word.replace("щ", "ў")
+    word = word.replace("ъ", "'")
+    return word
+
 
 def is_belarusian(word: str):
     for char in word:
@@ -301,7 +318,7 @@ def is_vowel_sound(sound: str):
     return sound in vowel_sound_list or non_accent_pair(sound) in vowel_sound_list
 
 def add_accent(word: str, accent: int):
-    return word[:accent] + '<span class="accent-vowel">' + word[accent] + '</span>' + word[accent + 1:]
+    return word[:accent] + '_' + word[accent] + '_' + word[accent + 1:]
 
 def get_alpha_index(c):
     return alpha_index.get(c, -1)
