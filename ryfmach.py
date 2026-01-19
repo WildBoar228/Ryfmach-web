@@ -91,9 +91,6 @@ def get_word_data_from_db(input_word: str, fix_similar_letters: bool = False):
         print("ERROR get_word_data: ", exc)
     finally:
         db_lock.release()
-
-    if len(words) == 0:
-        return get_compound_word_data_from_db(input_word, fix_similar_letters)
     
     words = sorted(words, key=record_sort_key(alphabet_sort_words_key))
     
@@ -105,7 +102,8 @@ def get_word_data_from_db(input_word: str, fix_similar_letters: bool = False):
                           words[i][4] == words[i - 1][4]):
             word_variants.append(get_word_dict(words[i]))
 
-    return word_variants
+    last_part_word_variants = get_compound_word_data_from_db(input_word, fix_similar_letters)
+    return last_part_word_variants + word_variants
 
 
 def get_compound_word_data_from_db(input_word: str, fix_similar_letters: bool = False):
@@ -124,7 +122,7 @@ def get_compound_word_data_from_db(input_word: str, fix_similar_letters: bool = 
             #     w["initial_accent"] = w["initial_accent"] + accent_shift
             return w
 
-        last_part_words = list(map(append_prefix, last_part_words))        
+        last_part_words = list(map(append_prefix, last_part_words))
         return last_part_words
     else:
         return []
