@@ -8,8 +8,19 @@ from pprint import pprint
 
 MAX_RHYMES_IN_RESP = 2000
 MAX_RHYME_MISTAKE = 3
-MIN_RHYMES_ADAPTIVE = 25
+MIN_RHYMES_ADAPTIVE = 50
 MAX_ACCEPTABLE_PENALTY = 13 * 10000
+
+class DB_columns:
+    ID = 0
+    WORD = 1
+    INITIAL_ID = 2
+    PART_OF_SPEECH = 3
+    ACCENT = 4
+    SOUND_HASH_0 = 5
+    SOUND_HASH_1 = 6
+    SOUND_HASH_2 = 7
+    SOUND_HASH_3 = 8
 
 
 def get_word_dict(w):
@@ -50,32 +61,28 @@ def get_word_data_from_db(input_word: str, fix_similar_letters: bool = False):
         db_lock.acquire(True)
         words = []
         
+        word_template = input_word
         if fix_similar_letters:
             replace_letters = {"у": "ў", "ў": "у", "е": "ё", "ё": "е"}
 
-            word_template = input_word
             for letter in replace_letters:
                 word_template = word_template.replace(letter, "_")
-            
-            if not (0 < word_template.count('_') <= 5):
-                fix_similar_letters = False
-            else:
-                match = cur.execute('''SELECT * FROM words WHERE word LIKE ?
+        
+        if word_template.count('_') == 0 or word_template.count('_') > 5:
+            match = cur.execute('''SELECT * FROM words WHERE word LIKE ?
                                     ORDER BY word, initial_id, accent_index;''',
                                     (word_template,)).fetchall()
-                
-                for i, rec in enumerate(match):
-                    is_same_word = True
-                    for j in range(len(input_word)):
-                        if (word_template[j] == '_' and
-                            rec[1][j] != input_word[j] and
-                            rec[1][j] != replace_letters.get(input_word[j])):
-                                is_same_word = False
-                                break
-                    if is_same_word:
-                        words.append(rec)
-        
-        if not fix_similar_letters:
+            for i, rec in enumerate(match):
+                is_same_word = True
+                for j in range(len(input_word)):
+                    if (word_template[j] == '_' and
+                        rec[1][j] != input_word[j] and
+                        rec[1][j] != replace_letters.get(input_word[j])):
+                            is_same_word = False
+                            break
+                if is_same_word:
+                    words.append(rec)
+        else:
             words = cur.execute('''SELECT * FROM words WHERE word == ?
                                     ORDER BY word, initial_id, accent_index;''',
                                 (input_word,)).fetchall()
@@ -84,6 +91,9 @@ def get_word_data_from_db(input_word: str, fix_similar_letters: bool = False):
         print("ERROR get_word_data: ", exc)
     finally:
         db_lock.release()
+
+    if len(words) == 0:
+        return get_compound_word_data_from_db(input_word, fix_similar_letters)
     
     words = sorted(words, key=record_sort_key(alphabet_sort_words_key))
     
@@ -96,6 +106,28 @@ def get_word_data_from_db(input_word: str, fix_similar_letters: bool = False):
             word_variants.append(get_word_dict(words[i]))
 
     return word_variants
+
+
+def get_compound_word_data_from_db(input_word: str, fix_similar_letters: bool = False):
+    if input_word.count('-') > 0:
+        last_part_start = input_word.rfind('-')
+        prefix = input_word[:last_part_start]
+        last_part = input_word[last_part_start + 1:]
+        last_part_words = get_word_data_from_db(last_part, fix_similar_letters)
+        accent_shift = len(input_word) - len(last_part)
+
+        def append_prefix(w):
+            w["word"] = prefix + '-' + w["word"]
+            w["accent"] = w["accent"] + accent_shift
+            # if w.get("initial_word") is not None:
+            #     w["initial_word"] = prefix + '-' + w["initial_word"]
+            #     w["initial_accent"] = w["initial_accent"] + accent_shift
+            return w
+
+        last_part_words = list(map(append_prefix, last_part_words))        
+        return last_part_words
+    else:
+        return []
 
 
 def get_working_part(word: str, accent: int, mistake: int = 0):
