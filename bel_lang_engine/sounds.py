@@ -1,6 +1,5 @@
-import language
-import ryfmach
-import numpy as np
+import bel_lang_engine.language as language
+# import numpy as np
 from pprint import pprint
 
 cost_to_replace = {

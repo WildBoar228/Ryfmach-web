@@ -1,7 +1,5 @@
-from ryfmach import get_word_data_from_db, get_word_dict
-import language
-from language import *
-import sounds
+from bel_lang_engine.ryfmach import get_word_data_from_db, get_word_dict
+from bel_lang_engine.language import *
 from pprint import pprint
 
 

@@ -1,6 +1,7 @@
 from flask import Flask, render_template, redirect, request, make_response, session, jsonify, send_from_directory
 import json
-import ryfmach, ryfmach_phonetics
+import bel_lang_engine.ryfmach as ryfmach
+import bel_lang_engine.ryfmach_phonetics as ryfmach_phonetics
 from pprint import pprint
 import logging
 import os

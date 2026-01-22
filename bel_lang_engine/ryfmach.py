@@ -1,7 +1,7 @@
 import sqlite3
 import threading
-from language import *
-import sounds
+from bel_lang_engine.language import *
+import bel_lang_engine.sounds as sounds
 import hashlib
 from pprint import pprint
 
