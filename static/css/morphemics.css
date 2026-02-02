@@ -17,7 +17,6 @@
     min-width: 14pt;
     border-radius: 4pt;
     text-align: center;
-    padding: 2pt;
     font: bold 16pt Arial, sans-serif;
 }
 
@@ -47,4 +46,17 @@
     background-image: url("/static/img/morphemics/ending.png");
     background-size: 100% 100%;
     /* background-color: indianred; */
+}
+
+@media screen and (orientation: portrait) {
+    .analysed-word-block {
+        padding: 2vh 5vw 2vh 5vw;
+        gap: 1vw;
+    }
+    
+    .word-part {
+        min-width: 6vw;
+        border-radius: 1vw;
+        font: bold 6vw Arial, sans-serif;
+    }
 }
