@@ -11,7 +11,7 @@ MAX_RHYME_MISTAKE = 3
 MIN_RHYMES_ADAPTIVE = 50
 MAX_ACCEPTABLE_PENALTY = 13 * 10000
 
-class DB_columns:
+class DB_WordsColumns:
     ID = 0
     WORD = 1
     INITIAL_ID = 2
@@ -27,21 +27,26 @@ def get_word_dict(w):
     try:
         db_lock.acquire(True)
         word_data = {}
-        word_data["word"] = w[1]
-        word_data["accent"] = w[4]
+        word_data["id"] = w[DB_WordsColumns.ID]
+        word_data["word"] = w[DB_WordsColumns.WORD]
+        word_data["part_of_speech_id"] = w[DB_WordsColumns.PART_OF_SPEECH]
+        word_data["accent"] = w[DB_WordsColumns.ACCENT]
         posp = cur.execute('''SELECT name FROM parts_of_speech
                             WHERE id == ?''',
-                            (w[3], )).fetchone()[0]
+                            (w[DB_WordsColumns.PART_OF_SPEECH], )).fetchone()
+        posp = posp[0] if len(posp) else ""
         word_data["part_of_speech"] = posp
         
         if w[2] == w[0]:
             word_data["is_initial"] = True
+            word_data["initial_id"] = w[DB_WordsColumns.ID]
         else:
             word_data["is_initial"] = False
             try:
+                word_data["initial_id"] = w[DB_WordsColumns.INITIAL_ID]
                 word_data["initial_word"], word_data["initial_accent"] = cur.execute(
                     '''SELECT word, accent_index FROM words WHERE id == ?''',
-                    (w[2],)
+                    (w[DB_WordsColumns.INITIAL_ID],)
                 ).fetchone()
             except TypeError:
                 # print(f"not found initial of {word_data["word"]}, initial index is {w[2]}")
@@ -56,42 +61,47 @@ def get_word_dict(w):
     return word_data
 
 
-def get_word_data_from_db(input_word: str, fix_similar_letters: bool = False):
+def find_word_records_in_table(word: str, table: str, fix_similar_letters = True):
     try:
         db_lock.acquire(True)
-        words = []
+        records = []
         
-        word_template = input_word
+        word_template = word
         if fix_similar_letters:
             replace_letters = {"у": "ў", "ў": "у", "е": "ё", "ё": "е"}
 
             for letter in replace_letters:
                 word_template = word_template.replace(letter, "_")
         
-        if word_template.count('_') == 0 or word_template.count('_') > 5:
-            match = cur.execute('''SELECT * FROM words WHERE word LIKE ?
-                                    ORDER BY word, initial_id, accent_index;''',
+        if word_template.count('_') > 0 and word_template.count('_') <= 5:
+            match = cur.execute(f'''SELECT * FROM {table} WHERE word LIKE ?;''',
                                     (word_template,)).fetchall()
-            for i, rec in enumerate(match):
+            for _, rec in enumerate(match):
                 is_same_word = True
-                for j in range(len(input_word)):
+                for j in range(len(word)):
                     if (word_template[j] == '_' and
-                        rec[1][j] != input_word[j] and
-                        rec[1][j] != replace_letters.get(input_word[j])):
+                        rec[1][j] != word[j] and
+                        rec[1][j] != replace_letters.get(word[j])):
                             is_same_word = False
                             break
                 if is_same_word:
-                    words.append(rec)
+                    records.append(rec)
         else:
-            words = cur.execute('''SELECT * FROM words WHERE word == ?
-                                    ORDER BY word, initial_id, accent_index;''',
-                                (input_word,)).fetchall()
+            records = cur.execute(f'''
+                SELECT * FROM {table}
+                WHERE word = ?
+            ''', (word,)).fetchall()
 
     except Exception as exc:
-        print("ERROR get_word_data: ", exc)
+        print("ERROR find_word_records_in_table: ", exc)
     finally:
         db_lock.release()
     
+    return records
+
+
+def get_word_data_from_db(input_word: str, fix_similar_letters: bool = False):
+    words = find_word_records_in_table(input_word, "words", fix_similar_letters)
     words = sorted(words, key=record_sort_key(alphabet_sort_words_key))
     
     word_variants = []
@@ -104,6 +114,26 @@ def get_word_data_from_db(input_word: str, fix_similar_letters: bool = False):
 
     last_part_word_variants = get_compound_word_data_from_db(input_word, fix_similar_letters)
     return last_part_word_variants + word_variants
+
+
+def get_word_forms(initial_id: int):
+    try:
+        db_lock.acquire(True)
+
+        word_forms = cur.execute("""
+            SELECT * FROM words
+            WHERE initial_id = ?
+        """, (initial_id,)).fetchall()
+
+    except Exception as exc:
+        print("ERROR get_word_forms: ", exc)
+    finally:
+        db_lock.release()
+
+    if word_forms is None:
+        return []
+
+    return list(map(lambda r: get_word_dict(r), word_forms))
 
 
 def get_compound_word_data_from_db(input_word: str, fix_similar_letters: bool = False):
@@ -482,7 +512,7 @@ def rhymes_text_list(input_word_request):
     return rhymes
 
 
-con = sqlite3.connect('db/Slounik4.db', check_same_thread=False)
+con = sqlite3.connect('db/Slounik5.db', check_same_thread=False) # db/Slounik4.db
 cur = con.cursor()
 
 db_lock = threading.Lock()

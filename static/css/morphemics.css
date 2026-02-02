@@ -1,0 +1,50 @@
+.sklad-analysis-block {
+    width: 80%;
+    margin: auto;
+    margin-top: 30px;
+}
+
+.analysed-word-block {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 5vh 10vw 5vh 10vw;
+    gap: 4pt;
+}
+
+.word-part {
+    min-width: 14pt;
+    border-radius: 4pt;
+    text-align: center;
+    padding: 2pt;
+    font: bold 16pt Arial, sans-serif;
+}
+
+.word-part-unknown {
+    background-color: lightgray;
+}
+
+.word-part-prefix {
+    background-image: url("/static/img/morphemics/prefix.png");
+    background-size: 100% 100%;
+    /* background-color: cadetblue; */
+}
+
+.word-part-root {
+    background-image: url("/static/img/morphemics/root.png");
+    background-size: 100% 100%;
+    /* background-color: peru; */
+}
+
+.word-part-suffix {
+    background-image: url("/static/img/morphemics/suffix.png");
+    background-size: 100% 100%;
+    /* background-color: lightgreen; */
+}
+
+.word-part-ending {
+    background-image: url("/static/img/morphemics/ending.png");
+    background-size: 100% 100%;
+    /* background-color: indianred; */
+}

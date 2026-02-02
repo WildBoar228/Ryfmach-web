@@ -112,6 +112,16 @@ cons_sound_list = list(cons_data)
 sonor = [1, 8, 9, 10, 11, 12, 15]
 
 
+class PartsOfSpeech:
+    NAZOUNIK = 1
+    DZEIASLOU = 2
+    PRYMETNIK = 3
+    ZAIMENNIK = 4
+    LICHEBNIK = 5
+    PRYSLOUE = 6
+    SLUZBOVAYA = 7
+
+
 def is_consonant_sound(sound):
     return cons_data.get(sound) is not None
 

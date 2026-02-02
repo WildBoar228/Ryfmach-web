@@ -2,6 +2,7 @@ from flask import Flask, render_template, redirect, request, make_response, sess
 import json
 import bel_lang_engine.ryfmach as ryfmach
 import bel_lang_engine.ryfmach_phonetics as ryfmach_phonetics
+import bel_lang_engine.ryfmach_morphemics as ryfmach_morphemics
 from pprint import pprint
 import logging
 import os
@@ -78,6 +79,41 @@ def phonetic_analysis():
 
     # session['phon_input_word_info'] = input_word_info
     return jsonify(word_variants=analysed, word_found=word_found)
+
+
+@app.route('/morphemics')
+def morphemics_page():
+    input_word_info = session.get("sklad_input_word_info", {"word": ""})
+    
+    return render_template(
+        "morphemics_page.html",
+        title="Рыфмач&nbsp;&ndash; марфемны разбор",
+        page_description="Рыфмач. Марфемны і словаўтваральны разбор, разбор па складзе. Морфемный разбор, разбор слова по составу.",
+        input_word=input_word_info["word"],
+        add_search_filter_button=False,
+        canonical_url="https://ryfmach.online/morphemics"
+    )
+
+
+@app.route('/morphemics', methods=['POST'])
+def morphemic_analysis():
+    input_word_info = request.json
+    if input_word_info.get('word') is None:
+        return jsonify(phon_analys=[], word_found=False)
+    
+    session["sklad_input_word_info"] = input_word_info
+
+    start_time = time.time()
+    app.logger.info("%s Request morphemics: %s", str(request.remote_addr), str(input_word_info))
+
+    analysed = ryfmach_morphemics.input_morphemic_analysis(input_word_info)
+    print(analysed)
+    word_found = len(analysed) > 0
+
+    print(f"{str(request.remote_addr)} Response time: {int((time.time() - start_time) * 1000)} ms")
+
+    # session['phon_input_word_info'] = input_word_info
+    return jsonify(variants=analysed, word_found=word_found)
 
 
 @app.route('/favicon.ico')
