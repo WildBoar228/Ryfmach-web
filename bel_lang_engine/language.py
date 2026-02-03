@@ -332,3 +332,6 @@ def add_accent(word: str, accent: int):
 
 def get_alpha_index(c):
     return alpha_index.get(c, -1)
+
+def count_vowels(word: str):
+    return len(filter(lambda c: is_vowel_letter(c), str))

@@ -116,7 +116,26 @@ def get_word_data_from_db(input_word: str, fix_similar_letters: bool = False):
     return last_part_word_variants + word_variants
 
 
+def get_word_by_id(word_id: int):
+    word_rec = None
+    try:
+        db_lock.acquire(True)
+
+        word_rec = cur.execute("""
+            SELECT * FROM words
+            WHERE id = ?
+        """, (word_id,)).fetchone()
+
+    except Exception as exc:
+        print("ERROR get_word_by_id: ", exc)
+    finally:
+        db_lock.release()
+        
+    return word_rec
+
+
 def get_word_forms(initial_id: int):
+    word_forms = None
     try:
         db_lock.acquire(True)
 

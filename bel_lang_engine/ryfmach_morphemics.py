@@ -1,7 +1,8 @@
 from bel_lang_engine.ryfmach import (
-    get_word_data_from_db, get_word_forms, find_word_records_in_table,
+    get_word_data_from_db, get_word_forms, find_word_records_in_table, get_word_by_id,
     db_lock, con, cur
 )
+import bel_lang_engine.ryfmach as ryfmach
 from bel_lang_engine.language import *
 from pprint import pprint
 
@@ -57,7 +58,19 @@ def input_morphemic_analysis(input_word_info) -> tuple[list, bool]:
     return word_morphemic_analysis(input_word_info["word"])
 
 
-def word_morphemic_analysis(word: str, fix_similar_letters = True) -> list:
+def word_morphemic_analysis(word, fix_similar_letters = True) -> list:
+    word_id = -1
+    if isinstance(word, str):
+        pass
+    elif isinstance(word, int):
+        word_id = word
+        word_record = get_word_by_id(word_id)
+        if word_record is None:
+            return []
+        word = word_record[ryfmach.DB_WordsColumns.WORD]
+    else:
+        return []
+    
     result = find_word_records_in_table(word, "morphemics", fix_similar_letters)
 
     # analysis found
@@ -68,8 +81,11 @@ def word_morphemic_analysis(word: str, fix_similar_letters = True) -> list:
                           result))
         return result
 
+    if word_id < 0:
+        word_dicts = get_word_data_from_db(word, True)
+    else:
+        word_dicts = [ryfmach.get_word_dict(get_word_by_id(word_id))]
 
-    word_dicts = get_word_data_from_db(word, True)
     result = []
     for word_dict in word_dicts:
         result += try_sure_predictions_or_initial(word_dict)
@@ -110,6 +126,9 @@ def cut_one_prefix(word: str):
         if cut_word.startswith(part_text):
             prefix_morphem = decrypt_analysis_to_json(part_analysis)
             cut_word = cut_word[len(part_text):]
+            if cut_word and cut_word[0] == "'":
+                prefix_morphem[-1]["text"] += "'"
+                cut_word = cut_word[1:]
             break
     
     return prefix_morphem, cut_word
@@ -170,10 +189,10 @@ def try_sure_predictions_or_initial(word_dict: dict) -> list[dict[list, bool]]:
             non_reflexive_word = word_dict["word"][:-3] + "ць"
             dzeeprysl_suf = word_dict["word"][-3:]
             non_reflexive_analysis = word_morphemic_analysis(non_reflexive_word, False)
-            print(non_reflexive_word)
+            # print(non_reflexive_word)
 
             for variant in non_reflexive_analysis:
-                print(variant["analysis"][-1])
+                # print(variant["analysis"][-1])
                 if variant["analysis"][-1]["text"] == "ць":
                     variant["analysis"][-1]["text"] = dzeeprysl_suf
                     analysis.append(variant)
@@ -182,7 +201,12 @@ def try_sure_predictions_or_initial(word_dict: dict) -> list[dict[list, bool]]:
         return analysis
     
     if word_dict.get("is_initial") != True:
-        return word_morphemic_analysis(word_dict["initial_word"])
+        initial_analysis = word_morphemic_analysis(word_dict["initial_id"])
+
+        # if word_dict["part_of_speech_id"] == PartsOfSpeech.DZEIASLOU:
+        #     analysis = [conjugate_verb(word_dict, a) for a in initial_analysis]
+        
+        return initial_analysis# word_morphemic_analysis(word_dict["initial_word"])
     
     return []
 
@@ -225,6 +249,48 @@ def try_other_predictions(word_dict: dict) -> list[dict[list, bool]]:
         analysis += decrypt_analysis_to_json(word_dict["word"])
     
     return [{"analysis": analysis, "sure": False}]
+
+
+def conjugate_verb(verb: dict, initial_analysis: list[Morphem]) -> list[str, list[Morphem]]:
+    verb_forms = get_word_forms(verb["initial_id"])
+    verb_initial = next((w for w in verb_forms if w["is_initial"]), None)
+    print(f"{verb["word"]} conjugation:  {get_verb_conjugation(verb_initial, verb_forms)}")
+
+
+def get_verb_conjugation(initial: dict, forms: list[dict]) -> int:
+    
+
+    for word in forms:
+        if not word["is_initial"]:
+            # 3rd face plural, ending is under accent
+            if (word["word"][-3:] in ["аць", "яць"]
+                and word["accent"] == len(word["word"]) - 3):
+                    return 2
+            if (word["word"][-3:] in ["уць", "юць"]
+                and word["accent"] == len(word["word"]) - 3):
+                    return 2
+        
+    if initial["word"][-3:] in ["ыць", "іць"]:
+        if count_vowels(initial["word"]) == 1:
+            return 1
+        for w in ["віць", "шыць", "біць", "ліць"]:
+            if is_word_derived_from(initial["word"], w):
+                return 1
+        return 2
+    
+    for w in ["ненавідзець", "цярпець", "вярцець", "залежаць", "гнаць"]:
+        if is_word_derived_from(initial["word"], w):
+            return 2
+    return 1
+    
+
+def is_word_derived_from(word: str, original: str):
+    first_prefix, cut_word = cut_one_prefix(word)
+    while first_prefix is not None:
+        if cut_word == original:
+            return True
+        first_prefix, cut_word = cut_one_prefix(cut_word)
+    return False
 
 
 def encrypt_morphems_to_store(ms: list[Morphem], use_letters=True):
