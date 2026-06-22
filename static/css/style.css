@@ -126,14 +126,16 @@
     border-radius: 15pt;
     padding: 0 10px 0 10px;
     background-color: white;
-    border-color: black;
+    border: 2px solid black;
     color: black;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-sizing: border-box;
 }
 
 .nav-link-button{
+    width: 100%;
     text-decoration: none;
 }
 
@@ -210,7 +212,13 @@
 }
 
 .links-offcanvas{
-    max-height: fit-content;
+    bottom: auto;
+    height: auto !important;
+    max-height: fit-content !important;
+}
+
+.links-offcanvas .offcanvas-body{
+    flex-grow: 0;
 }
 
 .metrika-pixel{
