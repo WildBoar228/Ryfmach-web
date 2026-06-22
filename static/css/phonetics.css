@@ -55,11 +55,19 @@
     height: fit-content;
 }
 
+.sound-analysis-letters {
+    font-weight: bold;
+}
+
+.sound-analysis-details {
+    width: fit-content;
+}
+
 @media screen and (orientation: portrait) {
     .transcription-block {
         padding: 2vh 5vw 2vh 5vw;
         gap: 3vw;
-        font: bold 6vw Arial, sans-serif;
+        font: bold 1.5rem Arial, sans-serif;
     }
 
     .sound-analysis-block {

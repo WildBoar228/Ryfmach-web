@@ -57,6 +57,6 @@
     .word-part {
         min-width: 6vw;
         border-radius: 1vw;
-        font: bold 6vw Arial, sans-serif;
+        font: bold 1.5rem Arial, sans-serif;
     }
 }

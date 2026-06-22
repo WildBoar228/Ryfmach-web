@@ -13,6 +13,7 @@ var search_mistake = -1;
 var sort_mode = "quality";
 
 const search_input_rhyme = document.getElementById("search-input");
+const search_form = document.getElementById("search-form");
 const search_button_rhyme = document.getElementById("search-button");
 const search_icon = document.getElementById("search-icon");
 const search_spinner = document.getElementById("search-spinner");
@@ -28,16 +29,43 @@ const rhymes_list = document.getElementById("rhymes-list");
 
 const manual_accent_modal = new bootstrap.Modal(document.getElementById('manual-accent-modal'));
 const letter_buttons_block = document.getElementById("letter-buttons-block");
+const search_accent_button = document.getElementById("search-accent-button");
+const save_filters_button = document.getElementById("save-filters-button");
+const scroll_up_button = document.querySelector(".button-scroll-up");
 
 const fa_long_arrow_left = `<i class="fa fa-long-arrow-left" aria-hidden="true"></i>`
 
-window.onload = () => {
-    search_button_rhyme.onclick = post_rhymes_request;
+function set_loading(is_loading) {
+    search_button_rhyme.disabled = is_loading;
+    search_icon.hidden = is_loading;
+    search_spinner.hidden = !is_loading;
+}
+
+
+function escape_html(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+    }[char]));
+}
+
+
+function bind_events() {
+    search_form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        post_rhymes_request();
+    });
+    search_accent_button.addEventListener("click", post_rhymes_with_manual_accent);
+    save_filters_button.addEventListener("click", update_filters);
+    scroll_up_button.addEventListener("click", scroll_up);
 }
 
 
 function is_belarusian(word){
-    for (char in word){
+    for (let char in word){
         if (!alphabet.includes(word[char].toLowerCase()))
             return false;
     }
@@ -47,7 +75,7 @@ function is_belarusian(word){
 
 function word_contains_vowels(word){
     let seen_vowel = false;
-    for (char in word)
+    for (let char in word)
         if (vowels.includes(word[char]))
             seen_vowel = true;
     return seen_vowel;
@@ -55,9 +83,10 @@ function word_contains_vowels(word){
 
 
 function word_with_accent(word, accent, classes_accent="accent-vowel"){
-    if (accent)
-        word = word.slice(0, accent) + `<span class="${classes_accent}">${word[accent]}</span>` + word.slice(accent + 1);
-    return word;
+    word = String(word ?? "");
+    if (accent !== undefined && accent !== null && accent >= 0 && accent < word.length)
+        return escape_html(word.slice(0, accent)) + `<span class="${classes_accent}">${escape_html(word[accent])}</span>` + escape_html(word.slice(accent + 1));
+    return escape_html(word);
 }
 
 
@@ -65,11 +94,11 @@ function word_data_to_html(word_data, classes_normal="info-text", classes_accent
     let word = word_data.word;
     let accent = word_data.accent;
 
-    let text = word_with_accent(word, accent);
+    let text = word_with_accent(word, accent, classes_accent);
     if (word_data.is_initial !== undefined){
         if (!word_data.is_initial)
-            text += ` ${fa_long_arrow_left} ${word_with_accent(word_data.initial_word, word_data.initial_accent)}`;
-        text += ` (${word_data.part_of_speech})`;
+            text += ` ${fa_long_arrow_left} ${word_with_accent(word_data.initial_word, word_data.initial_accent, classes_accent)}`;
+        text += ` (${escape_html(word_data.part_of_speech)})`;
     }
 
     text = `<p class="${classes_normal}">${text}</p>`;
@@ -94,8 +123,7 @@ function process_rhymes_response(data){
 
     rhymes_response = data;
     
-    search_icon.style.display = "block";
-    search_spinner.style.display = "none";
+    set_loading(false);
 
     word_variants_block.style.visibility="visible";
     dropdown_choose_word.innerHTML="-";
@@ -110,10 +138,11 @@ function process_rhymes_response(data){
     
     rhymes_block.style.display = "block";
 
-    precalc_rhymes_html = precalc_rhymes_html.slice(0, data.rhymes_list)
-    for (i in data.rhymes_list){
-        word_data = data.rhymes_list[i].word_variant;
-        dropdown_choose_word_menu.innerHTML += `<li><button class="dropdown-item" onclick=update_rhymes(${i})>${word_data_to_html(word_data)}</button></li>`;
+    precalc_rhymes_html = precalc_rhymes_html.slice(0, data.rhymes_list.length)
+    precalc_rhymes_count = precalc_rhymes_count.slice(0, data.rhymes_list.length)
+    for (let i in data.rhymes_list){
+        let word_data = data.rhymes_list[i].word_variant;
+        dropdown_choose_word_menu.innerHTML += `<li><button class="dropdown-item" data-rhyme-index="${i}">${word_data_to_html(word_data)}</button></li>`;
 
         precalc_rhymes_html[i] = "";
         const rhymes_data = data.rhymes_list[i].rhymes_data;
@@ -125,16 +154,18 @@ function process_rhymes_response(data){
         else{
             rhymes_count_text.innerHTML = `Рыфмы: ${rhymes_data.length}`;
             if (rhymes_data.length == 1000)
-                rhymes_count_text.innerHTML += `<span style="color: red">(!)</span>`
+                rhymes_count_text.innerHTML += `<span class="count-warning">(!)</span>`
             precalc_rhymes_count[i] = rhymes_count_text.innerHTML;
-            // precalc_rhymes_html[i] = `<h1 class="rhyme-word" style="text-align: center">${rhymes_count_text}</h1>` + precalc_rhymes_html[i];
         }
 
-        for (j in rhymes_data){
-            precalc_rhymes_html[i] += `<li>${word_data_to_html(rhymes_data[j], classes_normal="rhyme-word")}</li>`;
+        for (let j in rhymes_data){
+            precalc_rhymes_html[i] += `<li>${word_data_to_html(rhymes_data[j], "rhyme-word")}</li>`;
         }
     }
 
+    dropdown_choose_word_menu.querySelectorAll("[data-rhyme-index]").forEach((button) => {
+        button.addEventListener("click", () => update_rhymes(Number(button.dataset.rhymeIndex)));
+    });
     update_rhymes(0);
 }
 
@@ -155,16 +186,19 @@ function generate_letter_buttons(){
     
     const letters_div = letter_buttons_block;
 
-    for (char in word){
+    for (let char in word){
         if (vowels.includes(word[char])){
-            letters_div.innerHTML += `\n<button type="button" class="square-letter-button-outline" onclick="letter_button_onclick(${char})" id="letter_btn${char}">${word[char]}</button>`;
+            letters_div.innerHTML += `\n<button type="button" class="square-letter-button-outline" data-accent-index="${char}" id="letter_btn${char}">${escape_html(word[char])}</button>`;
             accent_index = parseInt(char);
         }
         else{
-            letters_div.innerHTML += `\n<div class="square-letter-label"><label>${word[char]}</label></div>`;
+            letters_div.innerHTML += `\n<div class="square-letter-label"><label>${escape_html(word[char])}</label></div>`;
         }
     }
 
+    letters_div.querySelectorAll("[data-accent-index]").forEach((button) => {
+        button.addEventListener("click", () => letter_button_onclick(Number(button.dataset.accentIndex)));
+    });
     letter_button_onclick(accent_index);
 }
 
@@ -204,7 +238,7 @@ function clean_input_word(w) {
 
 
 function post_rhymes_request(){
-    for (i = 1; i <= 7; ++i){
+    for (let i = 1; i <= 7; ++i){
         filtered_parts_of_speech[i - 1] = document.getElementById(`check-posp-${i}`).checked;
     }
     filtered_only_initial = document.getElementById(`check-only-initial`).checked;
@@ -230,8 +264,7 @@ function post_rhymes_request(){
         return;
     }
 
-    search_icon.style.display = "none";
-    search_spinner.style.display = "block";
+    set_loading(true);
     rhymes_block.style.display = "none";
 
     $.ajax({
@@ -247,6 +280,10 @@ function post_rhymes_request(){
             "sort_mode": sort_mode,
         }),
         success: process_rhymes_response,
+        error: () => {
+            search_status_info.innerHTML = `<div class="alert alert-danger info-text" role="alert">Не атрымалася выканаць пошук. Паспрабуйце яшчэ раз.</div>`;
+        },
+        complete: () => set_loading(false),
     });
 }
 
@@ -275,8 +312,7 @@ function post_rhymes_with_manual_accent(){
     manual_accent_modal.hide();
     
     search_status_info.innerHTML = "";
-    search_icon.style.display = "none";
-    search_spinner.style.display = "block";
+    set_loading(true);
 
     $.ajax({
         url: "/",
@@ -292,19 +328,23 @@ function post_rhymes_with_manual_accent(){
             "sort_mode": sort_mode,
         }),
         success: process_rhymes_response,
+        error: () => {
+            search_status_info.innerHTML = `<div class="alert alert-danger info-text" role="alert">Не атрымалася выканаць пошук. Паспрабуйце яшчэ раз.</div>`;
+        },
+        complete: () => set_loading(false),
     });
 }
 
 
 function update_filters(){
-    for (i = 1; i <= 7; ++i){
+    for (let i = 1; i <= 7; ++i){
         filtered_parts_of_speech[i - 1] = document.getElementById(`check-posp-${i}`).checked;
     }
     filtered_only_initial = document.getElementById(`check-only-initial`).checked;
     search_mistake = parseInt($("#search-mistake-radio :input:radio:checked").val());
     sort_mode = $("#sort-mode-radio :input:radio:checked").val();
 
-    new_input = clean_input_word(search_input_rhyme.value);
+    let new_input = clean_input_word(search_input_rhyme.value);
     if (new_input != w){
         w = new_input;
         accent_index = -1;
@@ -314,8 +354,7 @@ function update_filters(){
         return;
 
     search_status_info.innerHTML = "";
-    search_icon.style.display = "none";
-    search_spinner.style.display = "block";
+    set_loading(true);
 
     if (accent_index == -1){
         $.ajax({
@@ -330,8 +369,12 @@ function update_filters(){
                 "search_mistake": search_mistake,
                 "sort_mode": sort_mode,
             }),
-            success: process_rhymes_response,
-        });
+                success: process_rhymes_response,
+                error: () => {
+                    search_status_info.innerHTML = `<div class="alert alert-danger info-text" role="alert">Не атрымалася абнавіць фільтры. Паспрабуйце яшчэ раз.</div>`;
+                },
+                complete: () => set_loading(false),
+            });
     }
     else{
         $.ajax({
@@ -348,6 +391,10 @@ function update_filters(){
                 "sort_mode": sort_mode,
             }),
             success: process_rhymes_response,
+            error: () => {
+                search_status_info.innerHTML = `<div class="alert alert-danger info-text" role="alert">Не атрымалася абнавіць фільтры. Паспрабуйце яшчэ раз.</div>`;
+            },
+            complete: () => set_loading(false),
         });
     }
 }
@@ -356,3 +403,6 @@ function update_filters(){
 function scroll_up(){
     window.scrollTo({top: 0, behavior: "smooth"});
 }
+
+
+bind_events();
