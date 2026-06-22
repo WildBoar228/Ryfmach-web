@@ -1,6 +1,7 @@
 from flask import Flask, render_template, redirect, request, make_response, session, jsonify, send_from_directory
 import json
 import bel_lang_engine.ryfmach as ryfmach
+import bel_lang_engine.rhyme_likes as rhyme_likes
 import bel_lang_engine.ryfmach_phonetics as ryfmach_phonetics
 import bel_lang_engine.ryfmach_morphemics as ryfmach_morphemics
 from pprint import pprint
@@ -11,6 +12,36 @@ import time
 app = Flask(__name__, template_folder='static/templates')
 app.config['SECRET_KEY'] = 'garikgoyda_secret_key'
 app.logger.setLevel(logging.INFO)
+
+
+def get_like_payload():
+    data = request.get_json(silent=True) or {}
+    request_word = data.get("request", {})
+    rhyme_word = data.get("rhyme", {})
+
+    try:
+        payload = {
+            "request_word": str(request_word["word"]),
+            "request_stress": int(request_word["stress"]),
+            "rhyme_word": str(rhyme_word["word"]),
+            "rhyme_stress": int(rhyme_word["stress"]),
+        }
+    except (KeyError, TypeError, ValueError):
+        return None
+
+    if not payload["request_word"] or not payload["rhyme_word"]:
+        return None
+
+    return payload
+
+
+def update_rhyme_like_score(delta: int):
+    payload = get_like_payload()
+    if payload is None:
+        return jsonify(error="Invalid like payload"), 400
+
+    score = rhyme_likes.update_score(delta=delta, **payload)
+    return jsonify(score=score)
 
 
 @app.route('/')
@@ -46,6 +77,16 @@ def update_rhymes():
 
     session['rhyme_input_word_info'] = input_word_info
     return jsonify(rhymes_list=rhymes, word_found=word_found)
+
+
+@app.route('/rhyme/like', methods=['POST'])
+def like_rhyme():
+    return update_rhyme_like_score(1)
+
+
+@app.route('/rhyme/dislike', methods=['POST'])
+def dislike_rhyme():
+    return update_rhyme_like_score(-1)
 
 
 @app.route('/phonetics')

@@ -248,10 +248,112 @@
     gap: 20px;
 }
 
+.rhymes-list{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 8px;
+    padding: 0;
+    margin: 18px 0 0;
+    list-style: none;
+}
+
+.rhyme-item{
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 52px;
+    padding: 7px 10px;
+    border: 1px solid rgb(230, 230, 230);
+    border-radius: 8px;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+    transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.rhyme-item:hover,
+.rhyme-item:focus-within{
+    border-color: var(--light-primary-color);
+    background-color: rgb(255, 253, 239);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
 .rhyme-word{
     font: bold 14pt Arial, sans-serif;
     color: black;
     overflow-wrap: anywhere;
+}
+
+.rhyme-text{
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.rhyme-item .rhyme-word,
+.rhyme-main,
+.rhyme-meta{
+    margin: 0;
+}
+
+.rhyme-item .rhyme-word{
+    font: bold 1rem Arial, sans-serif;
+    line-height: 1.25;
+}
+
+.rhyme-main{
+    font: bold 1.08rem Arial, sans-serif;
+    line-height: 1.12;
+    color: black;
+    overflow-wrap: normal;
+    word-break: normal;
+    hyphens: none;
+}
+
+.rhyme-main.is-long{
+    font-size: 1rem;
+}
+
+.rhyme-main.is-extra-long{
+    font-size: 0.92rem;
+}
+
+.rhyme-meta{
+    margin-top: 2px;
+    font: normal 0.86rem Arial, sans-serif;
+    line-height: 1.15;
+    color: rgb(96, 96, 96);
+    overflow-wrap: anywhere;
+}
+
+.rhyme-like{
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: 50%;
+    padding: 0;
+    background-color: transparent;
+    color: rgb(150, 150, 150);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 160ms ease, color 160ms ease;
+}
+
+.rhyme-like:hover,
+.rhyme-like:focus-visible{
+    background-color: rgb(255, 240, 240);
+    color: firebrick;
+    outline: none;
+}
+
+.rhyme-like.is-liked{
+    color: firebrick;
+}
+
+.rhyme-like:disabled{
+    cursor: wait;
+    opacity: 0.65;
 }
 
 .accent-vowel{

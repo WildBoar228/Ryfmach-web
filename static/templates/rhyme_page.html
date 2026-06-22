@@ -16,7 +16,7 @@
         <div class="center-block rhyme-count-row">
             <h1 class="rhyme-word" id="rhyme-count-text"></h1>
         </div>
-        <ul id="rhymes-list">
+        <ul class="rhymes-list" id="rhymes-list">
         {% include "rhymes_content.html" %}
         </ul>
     </div>
@@ -185,5 +185,5 @@
         integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
         crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
-    <script src="{{url_for('static', filename='js/rhymes.js') + '?ver=1.5.0'}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/rhymes.js') + '?ver=1.5.3'}}" type="text/javascript"></script>
 {% endblock %}

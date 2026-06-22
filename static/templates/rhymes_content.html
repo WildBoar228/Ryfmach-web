@@ -1,5 +1,10 @@
     {% for rhyme in rhymes %}
-    <li class="rhyme-word">
-        <p> {{rhyme}}</p>
+    <li class="rhyme-item">
+        <button class="rhyme-like" type="button" aria-label="Падабаецца">
+            <i class="fa fa-heart-o" aria-hidden="true"></i>
+        </button>
+        <div class="rhyme-text">
+            <p class="rhyme-main">{{rhyme}}</p>
+        </div>
     </li>
     {% endfor %}
