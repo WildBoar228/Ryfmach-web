@@ -11,24 +11,30 @@
 }
 
 .main-logo{
-    margin: 0vh auto 0px auto;
+    margin: 0 auto;
     display: flex;
     align-items: center;
-    width: 50vmin;
+    width: min(50vmin, 360px);
+    max-width: calc(100% - 32px);
 }
 
 .header-block{
     align-self: center;
-    width: 100%;
+    width: min(100%, 900px);
     display: flex;
     flex-direction: column;
-    padding: 5vh 10vw 5vh 10vw;
+    padding: clamp(24px, 5vh, 56px) 24px;
+    margin: 0 auto;
 }
 
 .faq-block{
     margin: 50px auto 50px auto;
-    width: 90vmin;
+    width: min(100% - 32px, 760px);
     text-align: left;
+}
+
+.faq-item{
+    margin-bottom: 70px;
 }
 
 .greeting{
@@ -81,24 +87,25 @@
 .search-block{
     display: flex;
     justify-content: center;
-    gap: 20px;
-    width: 80vw;
-    height: fit-content;
+    align-items: center;
+    gap: 16px;
+    width: min(100% - 32px, 760px);
+    min-height: 48px;
     margin: 10px;
 }
 
 .word-search{
-    width: 80vw;
-    height: 30pt;
-    border-radius: 15pt;
-    padding: 0px 10px 0px 10px;
-    /* margin: 0px 10px 0px 10px; */
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 48px;
+    border-radius: 24px;
+    padding: 0 16px;
     font: normal 16pt Arial, sans-serif;
 }
 
 .bright-button{
-    height: 30pt;
-    border-radius: 15pt;
+    min-height: 44px;
+    border-radius: 22px;
     padding: 0 10px 0 10px;
     background-color: var(--primary-color);
     display: flex;
@@ -107,8 +114,8 @@
 }
 
 .dull-button{
-    height: 30pt;
-    border-radius: 15pt;
+    min-height: 44px;
+    border-radius: 22px;
     padding: 0 10px 0 10px;
     background-color: gray;
     color: white;
@@ -118,19 +125,56 @@
 }
 
 .modest-button{
-    height: 30pt;
-    border-radius: 15pt;
+    min-height: 44px;
+    border-radius: 22px;
     padding: 0 10px 0 10px;
     background-color: white;
-    border-color: black;
+    border: 2px solid black;
     color: black;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-sizing: border-box;
+}
+
+.nav-link-button{
+    width: 100%;
+    text-decoration: none;
+}
+
+.nav-link-button:hover{
+    color: black;
+    text-decoration: none;
+}
+
+.accent-link{
+    color: var(--dark-primary-color);
+}
+
+.beta-mark{
+    color: red;
+}
+
+.warning-icon{
+    color: orange;
+}
+
+.hidden-visibility{
+    visibility: hidden;
+}
+
+.search-status-text{
+    margin: 20px;
+}
+
+.count-warning{
+    color: red;
 }
 
 .button-search{
-    width: fit-content;
+    width: 48px;
+    min-width: 48px;
+    padding: 0;
     font: normal 16pt Arial, sans-serif;
     transition: 300ms cubic-bezier(0.075, 0.82, 0.165, 1) 0s;
 }
@@ -142,7 +186,9 @@
 }
 
 .button-filters{
-    width: fit-content;
+    width: 48px;
+    min-width: 48px;
+    height: 48px;
     aspect-ratio: 1 / 1;
     font: normal 16pt Arial, sans-serif;
     border-radius: 10pt;
@@ -167,20 +213,45 @@
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    width: 80vw;
-    max-width: 300px;
+    width: min(100% - 40px, 375px);
+    max-width: 375px;
     gap: 10pt;
 }
 
+.links-offcanvas{
+    bottom: auto;
+    height: auto !important;
+    max-height: fit-content !important;
+}
+
+.links-offcanvas .offcanvas-body{
+    flex-grow: 0;
+}
+
+.metrika-pixel{
+    position: absolute;
+    left: -9999px;
+}
+
+.is-hidden{
+    display: none;
+}
+
 .rhymes-block{
-    width: 80%;
+    width: min(100% - 32px, 900px);
     margin: auto;
     margin-top: 30px;
+}
+
+.rhyme-count-row{
+    display: flex;
+    gap: 20px;
 }
 
 .rhyme-word{
     font: bold 14pt Arial, sans-serif;
     color: black;
+    overflow-wrap: anywhere;
 }
 
 .accent-vowel{
@@ -189,13 +260,13 @@
 }
 
 .errors-block{
-    width: 80%;
+    width: min(100% - 32px, 760px);
     margin: auto;
     margin-top: 30px;
 }
 
 .error-msg{
-    width: 70vw;
+    width: 100%;
     height: 24pt;
     border-radius: 10px;
     background-color: rgb(255, 171, 171);
@@ -208,21 +279,22 @@
 }
 
 .dropdown-light{
-    height: 30pt;
+    min-height: 44px;
     background-color: azure;
     border: black 1px;
     border-radius: 10px;
 }
 
 .invisible{
-    visibility: "collapse";
+    visibility: collapse;
 }
 
 .button-scroll-up{
     position: fixed;
-    right: 30px;
-    bottom: 30px;
+    right: max(16px, env(safe-area-inset-right));
+    bottom: max(16px, env(safe-area-inset-bottom));
     font: normal 16pt Arial, sans-serif;
+    z-index: 1030;
 }
 
 .button-spinner{
@@ -231,16 +303,16 @@
 }
 
 .square-letter-label{
-    width: 30px;
-    height: 30px;
+    width: 44px;
+    height: 44px;
     border-radius: 10px;
     text-align: center;
     font: normal 16pt Arial, sans-serif;
 }
 
 .square-letter-button-outline{
-    width: 30px;
-    height: 30px;
+    width: 44px;
+    height: 44px;
     border-radius: 10px;
     border: 1px firebrick;
     color: black;
@@ -249,8 +321,8 @@
 }
 
 .square-letter-button-chosen{
-    width: 30px;
-    height: 30px;
+    width: 44px;
+    height: 44px;
     border-radius: 10px;
     border: 1px black;
     background-color: firebrick;
@@ -284,11 +356,16 @@
 
 .add-word-form{
     background-color: var(--primary-color);
-    width: 60vw;
+    width: min(100% - 32px, 680px);
     border-radius: 20px;
     padding: 30px;
     margin: auto;
     margin-top: 50px;
+}
+
+.maintenance-title{
+    text-align: center;
+    width: 100%;
 }
 
 .one-line-input{
@@ -304,141 +381,184 @@
     color: black;
 }
 
-@media screen and (orientation: portrait){
+@media (max-width: 640px){
+    body{
+        padding-bottom: 72px;
+    }
+
+    .main-navbar {
+        padding: 12px 16px;
+    }
+
     .main-logo{
-        width: 70vw;
+        width: min(68vw, 280px);
     }
 
     .header-block{
-        padding: 5vh 5vw 5vh 5vw;
+        padding: 20px 16px 18px;
     }
 
     .faq-block{
-        width: 80vw;
+        width: calc(100% - 32px);
+        margin-top: 36px;
+    }
+
+    .faq-item{
+        margin-bottom: 48px;
     }
 
     .greeting{
-        font: bold 10vw Arial, sans-serif;
+        font: bold 2rem Arial, sans-serif;
     }
 
     .mid-header{
-        font: bold 8vw Arial, sans-serif;
+        font: bold 1.5rem Arial, sans-serif;
     }
 
     .description{
-        font: normal 5vw Arial, sans-serif;
+        font: normal 1.25rem Arial, sans-serif;
     }
 
     .info-text{
-        font: normal 5vw Arial, sans-serif;
+        font: normal 1.25rem Arial, sans-serif;
     }
 
     .weighty-info-text{
-        font: bold 6vw Arial, sans-serif;
+        font: bold 1.5rem Arial, sans-serif;
         margin: 0;
     }
 
     .small-info-text{
-        font: normal 5vw Arial, sans-serif;
+        font: normal 1.25rem Arial, sans-serif;
     }
 
     .search-block{
-        width: 90vw;
-        height: 10vw;
-        gap: 3vw;
+        width: calc(100% - 24px);
+        min-height: 48px;
+        gap: 8px;
+        margin: 8px 12px;
     }
 
     .word-search{
-        width: 50vw;
-        height: 10vw;
-        border-radius: 5vw;
-        padding: 0px 2vw 0px 2vw;
-        /* margin: 0px 2vw 0px 2vw; */
-        font: normal 5vw Arial, sans-serif;
+        height: 48px;
+        border-radius: 24px;
+        padding: 0 14px;
+        font: normal 1.25rem Arial, sans-serif;
     }
 
     .dropdown-light{
-        border-radius: 2vw;
-        height: 10vw;
+        border-radius: 12px;
+        min-height: 44px;
+        max-width: calc(100vw - 32px);
     }
 
     .bright-button{
-        height: 8vw;
-        border-radius: 4vw;
-        padding: 0px 2vw 0px 2vw;
-        font: normal 5vw Arial, sans-serif;
+        min-height: 44px;
+        border-radius: 22px;
+        padding: 0 12px;
+        font: normal 1.25rem Arial, sans-serif;
     }
 
     .dull-button{
-        height: 8vw;
-        border-radius: 4vw;
-        padding: 0px 2vw 0px 2vw;
-        font: normal 5vw Arial, sans-serif;
+        min-height: 44px;
+        border-radius: 22px;
+        padding: 0 12px;
+        font: normal 1.25rem Arial, sans-serif;
     }
 
     .modest-button{
-        height: fit-content;
-        border-radius: 4vw;
-        padding: 0px 2vw 0px 2vw;
-        font: normal 5vw Arial, sans-serif;
+        min-height: 48px;
+        border-radius: 24px;
+        padding: 0 12px;
+        font: normal 1.25rem Arial, sans-serif;
     }
 
     .button-search{
-        height: 10vw;
-        border-radius: 5vw;
-        font: normal 5vw Arial, sans-serif;
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
+        border-radius: 24px;
+        font: normal 1.25rem Arial, sans-serif;
     }
 
     .button-filters{
-        height: 10vw;
-        border-radius: 3vw;
-        font: normal 5vw Arial, sans-serif;
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
+        border-radius: 14px;
+        font: normal 1.25rem Arial, sans-serif;
     }
 
     .button-scroll-up{
-        font: normal 5vw Arial, sans-serif;
+        font: normal 1.25rem Arial, sans-serif;
+        right: max(12px, env(safe-area-inset-right));
+        bottom: max(12px, env(safe-area-inset-bottom));
     }
 
     .rhyme-word{
-        font: bold 4vw Arial, sans-serif;
+        font: bold 1.05rem Arial, sans-serif;
     }
 
     .button-spinner{
-        width: 5vw;
-        height: 5vw;
+        width: 20px;
+        height: 20px;
     }
 
     .square-letter-label{
-        width: 6vw;
-        height: 6vw;
-        border-radius: 2vw;
-        font: normal 6vw Arial, sans-serif;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        font: normal 1.4rem Arial, sans-serif;
     }
 
     .square-letter-button-outline{
-        width: 6vw;
-        height: 6vw;
-        border-radius: 2vw;
-        font: normal 6vw Arial, sans-serif;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        font: normal 1.4rem Arial, sans-serif;
     }
 
     .square-letter-button-chosen{
-        width: 6vw;
-        height: 6vw;
-        border-radius: 2vw;
-        font: normal 6vw Arial, sans-serif;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        font: normal 1.4rem Arial, sans-serif;
     }
 
     .close-button{
-        width: 7vw;
-        height: 7vw;
-        border-radius: 2vw;
-        font: normal 4vw Arial, sans-serif;
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        font: normal 1rem Arial, sans-serif;
     }
 
     .nav-links-box {
         margin: auto;
-        width: 70vw;
-        max-width: 100vw;
+        width: min(100%, 375px);
+        max-width: calc(100vw - 32px);
+    }
+
+    .rhymes-block{
+        width: calc(100% - 24px);
+    }
+
+    .rhyme-count-row{
+        justify-content: center;
+    }
+}
+
+@media (max-width: 380px){
+    .greeting{
+        font: bold 1.75rem Arial, sans-serif;
+    }
+
+    .description,
+    .info-text,
+    .small-info-text{
+        font: normal 1.1rem Arial, sans-serif;
+    }
+
+    .search-block{
+        gap: 6px;
     }
 }

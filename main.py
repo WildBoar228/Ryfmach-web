@@ -19,7 +19,7 @@ def rhyme_page():
     session['rhyme_input_word_info'] = input_word_info
     return render_template(
         'rhyme_page.html',
-        title="Рыфмач&nbsp;&ndash; падабраць рыфму",
+        title="Рыфмач - падабраць рыфму",
         page_description="Рыфмач. Рыфмы на беларускай мове, пошук рыфм для вершаў. Рифмы на белорусском языке, поиск рифм для стихотворений.",
         input_word=input_word_info["word"],
         add_search_filter_button=True,
@@ -54,7 +54,7 @@ def phonetics_page():
     # session['phon_input_word_info'] = input_word_info
     return render_template(
         'phonetics_page.html',
-        title="Рыфмач&nbsp;&ndash; фанетычны разбор",
+        title="Рыфмач - фанетычны разбор",
         page_description="Рыфмач. Фанетычны разбор і транскрыпцыі на беларускай мове. Фонетический разбор и транскрипции на белорусском языке.",
         input_word=input_word_info["word"],
         add_search_filter_button=False,
@@ -87,7 +87,7 @@ def morphemics_page():
     
     return render_template(
         "morphemics_page.html",
-        title="Рыфмач&nbsp;&ndash; марфемны разбор",
+        title="Рыфмач - марфемны разбор",
         page_description="Рыфмач. Марфемны і словаўтваральны разбор, разбор па складзе. Морфемный разбор, разбор слова по составу.",
         input_word=input_word_info["word"],
         add_search_filter_button=False,

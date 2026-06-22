@@ -11,6 +11,7 @@ var input_word = "";
 var accent_index = -1;
 
 const search_input_sklad = document.getElementById("search-input");
+const search_form = document.getElementById("search-form");
 const search_button_sklad = document.getElementById("search-button");
 const search_icon = document.getElementById("search-icon");
 const search_spinner = document.getElementById("search-spinner");
@@ -23,13 +24,14 @@ const dropdown_choose_word_menu = document.getElementById("dropdown-choose-word-
 
 const manual_accent_modal = new bootstrap.Modal(document.getElementById('manual-accent-modal'));
 const letter_buttons_block = document.getElementById("letter-buttons-block");
+const scroll_up_button = document.querySelector(".button-scroll-up");
 
 const sklad_analysis_block = document.getElementById("sklad-analysis-block");
 
 const fa_long_arrow_left = `<i class="fa fa-long-arrow-left" aria-hidden="true"></i>`
 const fa_long_arrow_right = `<i class="fa fa-long-arrow-right" aria-hidden="true"></i>`
 
-const fa_warning = `<i class="fa fa-warning" style="color: orange"></i>`
+const fa_warning = `<i class="fa fa-warning warning-icon" aria-hidden="true"></i>`
 
 const kPartTypeUnknown = 0;
 const kPartTypePrefix  = 1;
@@ -38,14 +40,36 @@ const kPartTypeSuffix  = 3;
 const kPartTypeEnding  = 4;
 
 
-window.onload = () => {
-    search_button_sklad.onclick = post_sklad_request;
+function set_loading(is_loading) {
+    search_button_sklad.disabled = is_loading;
+    search_icon.hidden = is_loading;
+    search_spinner.hidden = !is_loading;
+}
+
+
+function escape_html(value) {
+    return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+    }[char]));
+}
+
+
+function bind_events() {
+    search_form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        post_sklad_request();
+    });
+    scroll_up_button.addEventListener("click", scroll_up);
     word_variants_block.style.display = "none";
 }
 
 
 function is_belarusian(word){
-    for (char in word){
+    for (let char in word){
         if (!alphabet.includes(word[char].toLowerCase()))
             return false;
     }
@@ -75,19 +99,18 @@ function is_consonant(sound) {
 function process_sklad_response(data){
     sklad_response = data;
     
-    search_icon.style.display = "block";
-    search_spinner.style.display = "none";
+    set_loading(false);
 
     sklad_analysis_block.innerHTML = "";
 
     let analysis_content = "";
-    for (i in data.variants){
+    for (let i in data.variants){
         analysis_content = "";
         const word_analysis = data.variants[i].analysis;
         
-        for (j in word_analysis) {
+        for (let j in word_analysis) {
             let classes = "word-part ";
-            let show_text = word_analysis[j].text;
+            let show_text = escape_html(word_analysis[j].text);
             
             switch (word_analysis[j].type) {
                 case kPartTypePrefix:
@@ -163,8 +186,7 @@ function post_sklad_request(){
         return;
     }
 
-    search_icon.style.display = "none";
-    search_spinner.style.display = "block";
+    set_loading(true);
 
     $.ajax({
         url: "/morphemics",
@@ -175,5 +197,17 @@ function post_sklad_request(){
             "word": input_word,
         }),
         success: process_sklad_response,
+        error: () => {
+            search_status_info.innerHTML = `<div class="alert alert-danger info-text" role="alert">Не атрымалася выканаць разбор. Паспрабуйце яшчэ раз.</div>`;
+        },
+        complete: () => set_loading(false),
     });
 }
+
+
+function scroll_up(){
+    window.scrollTo({top: 0, behavior: "smooth"});
+}
+
+
+bind_events();

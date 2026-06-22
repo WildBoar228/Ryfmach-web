@@ -12,8 +12,8 @@
 
     {% include "search_panel.html" %}
 
-    <div class="rhymes-block" id="rhymes-block" style="display: none">
-        <div class="center-block" style="display: flex; gap: 20px;">
+    <div class="rhymes-block is-hidden" id="rhymes-block">
+        <div class="center-block rhyme-count-row">
             <h1 class="rhyme-word" id="rhyme-count-text"></h1>
         </div>
         <ul id="rhymes-list">
@@ -80,7 +80,7 @@
                     <div class="form-check">
                         <input class="yellow-checkbox" type="radio" name="radioSort" id="radio-sort-quality" value="quality" checked>
                         <label class="small-info-text" for="radio-sort-quality">
-                            Па якасці <sup style="color:red">&beta;</sup>
+                            Па якасці <sup class="beta-mark">&beta;</sup>
                         </label>
                     </div>
                 </div>
@@ -147,40 +147,43 @@
             </div>
 
             <br>
-            <button type="button" class="bright-button rhyme-word" onclick="update_filters()" data-bs-dismiss="offcanvas">Захаваць</button>
+            <button id="save-filters-button" type="button" class="bright-button rhyme-word" data-bs-dismiss="offcanvas">Захаваць</button>
         </div>
     </div>
 
-    <button class="button-scroll-up bright-button" onclick="scroll_up()">
-        <i class="fa fa-chevron-up"></i>
+    <button class="button-scroll-up bright-button" type="button" aria-label="Пракруціць уверх">
+        <i class="fa fa-chevron-up" aria-hidden="true"></i>
     </button>
 
     <div class="faq-block">
-        <div style="margin-bottom: 70px">
+        <div class="faq-item">
             <p class="mid-header"> Як працуе пошук рыфмаў? </p>
             <p class="info-text"> Рыфмач выкарыстоўвае вялікую базу дадзеных, каб знайсці слова, якое Вы ўвялі, і вызначыць ў ім націск. Калі слоў з такім напісаннем некалькі, Вы можаце абраць любы варыянт з дапамогай блакітнай кнопкі. Пасля Рыфмач будуе транскрыпцыю і падбірае падобныя па гучанні словы. </p>
         </div>
-        <div style="margin-bottom: 70px">
+        <div class="faq-item">
             <p class="mid-header"> Як знайсці рыфму да слова, якога няма ў базе? </p>
             <p class="info-text"> У такім выпадку Вам будзе прапанавана ўказаць націскную галосную самастойна, гэтага дастаткова для пошуку. </p>
         </div>
-        <div style="margin-bottom: 70px">
+        <div class="faq-item">
             <p class="mid-header"> Не знайшлося ніводнай рыфмы, як з гэтым жыць? </p>
-            <p class="info-text"> На жаль, так бывае. З дапамогай фільтра "Трапнасць пошуку" Вы можаце знайсці меней строгія рыфмы. Калі вы ведаеце рыфму, якой не ведае Рыфмач, або Вы сутыкнуліся з іншай праблемай, калі ласка, напішыце пра гэта на пошту <a style="color: var(--dark-primary-color);" href="mailto:issues@ryfmach.online">issues@ryfmach.online</a>. </p>
+            <p class="info-text"> На жаль, так бывае. З дапамогай фільтра "Трапнасць пошуку" Вы можаце знайсці меней строгія рыфмы. Калі вы ведаеце рыфму, якой не ведае Рыфмач, або Вы сутыкнуліся з іншай праблемай, калі ласка, напішыце пра гэта на пошту <a class="accent-link" href="mailto:issues@ryfmach.online">issues@ryfmach.online</a>. </p>
         </div>
-        <div style="margin-bottom: 70px">
+        <div class="faq-item">
             <p class="mid-header"> Я бачу зашмат падобных рыфмаў, што рабіць? </p>
             <p class="info-text"> Вы можаце выкарыстоўваць фільтры (<i class="fa fa-cog" aria-hidden="true"></i>), каб прыбраць славаформы або словы пэўных часцін мовы. </p>
         </div>
-        <div style="margin-bottom: 70px">
+        <div class="faq-item">
             <p class="mid-header"> Мне вельмі падабаецца Рыфмач. Як я магу дапамагчы праэкту? </p>
             <p class="info-text"> Мы стараемся! 😀 Распавядзіце пра Рыфмача сваім сябрам і іншым аматарам вершаў, каб і яны маглі карыстацца сайтам! </p>
         </div>
     </div>
     
+{% endblock %}
+
+{% block scripts %}
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"
         integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
         crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js" integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q" crossorigin="anonymous"></script>
-    <script src="{{url_for('static', filename='js/rhymes.js') + '?ver=1.4.1'}}" type="text/javascript"></script>
+    <script src="{{url_for('static', filename='js/rhymes.js') + '?ver=1.5.0'}}" type="text/javascript"></script>
 {% endblock %}
