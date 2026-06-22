@@ -1,6 +1,10 @@
 from bel_lang_engine.ryfmach import get_word_data_from_db, get_word_dict
 from bel_lang_engine.language import *
 from pprint import pprint
+import bel_lang_engine.lang_logs as lang_logs
+import logging
+
+phon_logger = lang_logs.new_debug_logger("phonetics")
 
 
 class PHONETIC_PHENOMENA:
@@ -198,7 +202,7 @@ def input_phonetic_analysis(input_word_info):
     analysed = []
     for wv in word_variants:
         analysed.append(word_phonetic_analysis(wv))
-        print(' '.join(analysed[-1]["transcription"]))
+        phon_logger.debug(' '.join(analysed[-1]["transcription"]))
         
     return analysed
 

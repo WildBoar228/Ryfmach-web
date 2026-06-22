@@ -6,6 +6,11 @@ import bel_lang_engine.ryfmach as ryfmach
 from bel_lang_engine.language import *
 from pprint import pprint
 
+import bel_lang_engine.lang_logs as lang_logs
+import logging
+
+morph_logger = lang_logs.new_debug_logger("morphemics")
+
 
 prefix_parts = cur.execute("""SELECT * FROM morph_prefixes""").fetchall()
 prefix_parts = sorted(prefix_parts, key=lambda rec: -len(rec[1]))
@@ -97,7 +102,8 @@ def word_morphemic_analysis(word, fix_similar_letters = True) -> list:
     prefix_morphems = []
     first_prefix, cut_word = cut_one_prefix(word)
     while first_prefix is not None:
-        print(cut_word)
+        morph_logger.debug(cut_word)
+
         prefix_morphems += first_prefix
         analysis_of_cut = word_morphemic_analysis(cut_word, fix_similar_letters)
         if len(analysis_of_cut):
@@ -189,10 +195,10 @@ def try_sure_predictions_or_initial(word_dict: dict) -> list[dict[list, bool]]:
             non_reflexive_word = word_dict["word"][:-3] + "ць"
             dzeeprysl_suf = word_dict["word"][-3:]
             non_reflexive_analysis = word_morphemic_analysis(non_reflexive_word, False)
-            # print(non_reflexive_word)
+            # morph_logger.debug(non_reflexive_word)
 
             for variant in non_reflexive_analysis:
-                # print(variant["analysis"][-1])
+                # morph_logger.debug(variant["analysis"][-1])
                 if variant["analysis"][-1]["text"] == "ць":
                     variant["analysis"][-1]["text"] = dzeeprysl_suf
                     analysis.append(variant)
@@ -254,7 +260,7 @@ def try_other_predictions(word_dict: dict) -> list[dict[list, bool]]:
 def conjugate_verb(verb: dict, initial_analysis: list[Morphem]) -> list[str, list[Morphem]]:
     verb_forms = get_word_forms(verb["initial_id"])
     verb_initial = next((w for w in verb_forms if w["is_initial"]), None)
-    print(f"{verb["word"]} conjugation:  {get_verb_conjugation(verb_initial, verb_forms)}")
+    morph_logger.debug(f"{verb["word"]} conjugation:  {get_verb_conjugation(verb_initial, verb_forms)}")
 
 
 def get_verb_conjugation(initial: dict, forms: list[dict]) -> int:

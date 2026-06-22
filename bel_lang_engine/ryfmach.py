@@ -4,6 +4,9 @@ from bel_lang_engine.language import *
 import bel_lang_engine.sounds as sounds
 import hashlib
 from pprint import pprint
+import bel_lang_engine.lang_logs as lang_logs
+
+ryfmach_logger = lang_logs.new_debug_logger("ryfmach")
 
 
 MAX_RHYMES_IN_RESP = 2000
@@ -49,11 +52,11 @@ def get_word_dict(w):
                     (w[DB_WordsColumns.INITIAL_ID],)
                 ).fetchone()
             except TypeError:
-                # print(f"not found initial of {word_data["word"]}, initial index is {w[2]}")
+                # ryfmach_logger.debug(f"not found initial of {word_data["word"]}, initial index is {w[2]}")
                 word_data["is_initial"] = True
 
     except Exception as exc:
-        print(exc)
+        ryfmach_logger.debug(exc)
 
     finally:
         db_lock.release()
@@ -93,7 +96,7 @@ def find_word_records_in_table(word: str, table: str, fix_similar_letters = True
             ''', (word,)).fetchall()
 
     except Exception as exc:
-        print("ERROR find_word_records_in_table: ", exc)
+        ryfmach_logger.debug("ERROR find_word_records_in_table: ", exc)
     finally:
         db_lock.release()
     
@@ -127,7 +130,7 @@ def get_word_by_id(word_id: int):
         """, (word_id,)).fetchone()
 
     except Exception as exc:
-        print("ERROR get_word_by_id: ", exc)
+        ryfmach_logger.debug("ERROR get_word_by_id: ", exc)
     finally:
         db_lock.release()
         
@@ -145,7 +148,7 @@ def get_word_forms(initial_id: int):
         """, (initial_id,)).fetchall()
 
     except Exception as exc:
-        print("ERROR get_word_forms: ", exc)
+        ryfmach_logger.debug("ERROR get_word_forms: ", exc)
     finally:
         db_lock.release()
 
@@ -292,7 +295,7 @@ def alphabet_sort_words_key(w, accent=None):
     try:
         return [get_alpha_index(c) for c in w]
     except Exception as exc:
-        print(w, exc)
+        ryfmach_logger.debug(w, exc)
 
 
 def quality_sort_words_key(compare_with):
@@ -307,7 +310,7 @@ def quality_sort_words_key(compare_with):
                 alphabet_sort_words_key(w, accent),
             )
         except Exception as exc:
-            print(compare_with, w, exc)
+            ryfmach_logger.debug(compare_with, w, exc)
     return quality_with_comparation
 
 
@@ -340,7 +343,7 @@ def find_rhymes(input_word: str,
     
     working_parts = [get_working_part(input_word, input_accent, i)
                      for i in range(0, max(0, mistake) + 1)]
-    # print(working_parts)
+    # ryfmach_logger.debug(working_parts)
     
     sound_hashes = [get_sound_hash(input_word, input_accent, i)
                     for i in range(0, max(0, mistake) + 1)]
@@ -383,7 +386,7 @@ def find_rhymes(input_word: str,
         ).fetchall()
 
     except Exception as exc:
-        print("ERROR query: ", exc)
+        ryfmach_logger.debug("ERROR query: ", exc)
     finally:
         db_lock.release()
 
@@ -393,7 +396,7 @@ def find_rhymes(input_word: str,
                         words))
 
     words = sorted(words, key=record_sort_key(words_sort_key))
-    # print(f'{len(words)} words (at first), last: {words[-1] if len(words) > 0 else '-'}')
+    # ryfmach_logger.debug(f'{len(words)} words (at first), last: {words[-1] if len(words) > 0 else '-'}')
 
     # with open("output.txt", "w", encoding="utf-8") as file:
     #     file.write(str(words))
@@ -464,7 +467,7 @@ def find_rhymes(input_word: str,
         #         check_rhyme += step
         #     step //= 2
 
-        # print(f"cut righter than {check_rhyme} (initially {len(rhymes)})")
+        # ryfmach_logger.debug(f"cut righter than {check_rhyme} (initially {len(rhymes)})")
         # rhymes = rhymes[:check_rhyme]
     
     if len(rhymes) > cnt_limit:
@@ -472,7 +475,7 @@ def find_rhymes(input_word: str,
 
     output_str += f'{len(rhymes)} rhymes found'
     if debug_output:
-        print(output_str)
+        ryfmach_logger.debug(output_str)
     
     return rhymes
 
@@ -492,7 +495,7 @@ def print_best_rhymes(input_word, rhyme_list, k=5):
         penalty = round(penalty)
         output += f"{sounds.language.add_accent(rhyme["word"], rhyme["accent"])} ({penalty}),  "
     
-    print(output)
+    ryfmach_logger.debug(output)
 
 
 def rhymes_text_list(input_word_request):

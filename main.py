@@ -4,13 +4,32 @@ import bel_lang_engine.ryfmach as ryfmach
 import bel_lang_engine.ryfmach_phonetics as ryfmach_phonetics
 import bel_lang_engine.ryfmach_morphemics as ryfmach_morphemics
 from pprint import pprint
+
+from logging.handlers import RotatingFileHandler
 import logging
 import os
 import time
 
 app = Flask(__name__, template_folder='static/templates')
 app.config['SECRET_KEY'] = 'garikgoyda_secret_key'
+
+app_file_handler = RotatingFileHandler(
+    "logs/app.log",
+    maxBytes=1 * 1024 * 1024,  # 1 MB
+    backupCount=10,
+    encoding="utf-8",
+)
+
+app_file_handler.setLevel(logging.INFO)
+app_file_handler.setFormatter(
+    logging.Formatter(
+        "%(asctime)s %(levelname)s "
+        "[%(name)s] %(message)s"
+    )
+)
+
 app.logger.setLevel(logging.INFO)
+app.logger.addHandler(app_file_handler)
 
 
 @app.route('/')
@@ -42,7 +61,7 @@ def update_rhymes():
         rhymes = []
         word_found = False
 
-    print(f"{str(request.remote_addr)} Response time: {int((time.time() - start_time) * 1000)} ms")
+    app.logger.info(f"{str(request.remote_addr)} Response time: {int((time.time() - start_time) * 1000)} ms")
 
     session['rhyme_input_word_info'] = input_word_info
     return jsonify(rhymes_list=rhymes, word_found=word_found)
@@ -75,7 +94,7 @@ def phonetic_analysis():
     analysed = ryfmach_phonetics.input_phonetic_analysis(input_word_info)
     word_found = len(analysed) > 0
 
-    print(f"{str(request.remote_addr)} Response time: {int((time.time() - start_time) * 1000)} ms")
+    app.logger.info(f"{str(request.remote_addr)} Response time: {int((time.time() - start_time) * 1000)} ms")
 
     # session['phon_input_word_info'] = input_word_info
     return jsonify(word_variants=analysed, word_found=word_found)
@@ -107,10 +126,10 @@ def morphemic_analysis():
     app.logger.info("%s Request morphemics: %s", str(request.remote_addr), str(input_word_info))
 
     analysed = ryfmach_morphemics.input_morphemic_analysis(input_word_info)
-    print(analysed)
+    app.logger.info(analysed)
     word_found = len(analysed) > 0
 
-    print(f"{str(request.remote_addr)} Response time: {int((time.time() - start_time) * 1000)} ms")
+    app.logger.info(f"{str(request.remote_addr)} Response time: {int((time.time() - start_time) * 1000)} ms")
 
     # session['phon_input_word_info'] = input_word_info
     return jsonify(variants=analysed, word_found=word_found)
