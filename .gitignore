@@ -1,10 +1,13 @@
 db/
 log_archive/
 *.md
-*.txt
+# *.txt
 .htaccess
 edit_db.py
 SlounikDraft.db
 data/
 tests.py
 __pycache__/
+.venv/
+.codex/
+.agents/
