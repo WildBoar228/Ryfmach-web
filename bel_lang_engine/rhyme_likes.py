@@ -33,21 +33,37 @@ def update_score(request_word: str, request_stress: int, rhyme_word: str, rhyme_
             word_pair.sort()
             (request_word, request_stress), (rhyme_word, rhyme_stress) = word_pair
 
-            cur = con.execute("""
-                INSERT INTO rhyme_likes (
+            con.execute("""
+                INSERT OR IGNORE INTO rhyme_likes (
                     request_word,
                     request_stress,
                     rhyme_word,
                     rhyme_stress,
                     score
                 )
-                VALUES (?, ?, ?, ?, ?)
-                ON CONFLICT(request_word, request_stress, rhyme_word, rhyme_stress)
-                DO UPDATE SET
-                    score = score + excluded.score,
+                VALUES (?, ?, ?, ?, 0)
+            """, (request_word, request_stress, rhyme_word, rhyme_stress))
+
+            con.execute("""
+                UPDATE rhyme_likes
+                SET
+                    score = score + ?,
                     updated_at = CURRENT_TIMESTAMP
-                RETURNING score
-            """, (request_word, request_stress, rhyme_word, rhyme_stress, delta))
+                WHERE
+                    request_word = ?
+                    AND request_stress = ?
+                    AND rhyme_word = ?
+                    AND rhyme_stress = ?
+            """, (delta, request_word, request_stress, rhyme_word, rhyme_stress))
+
+            cur = con.execute("""
+                SELECT score FROM rhyme_likes
+                WHERE
+                    request_word = ?
+                    AND request_stress = ?
+                    AND rhyme_word = ?
+                    AND rhyme_stress = ?
+            """, (request_word, request_stress, rhyme_word, rhyme_stress))
             row = cur.fetchone()
             
             print(f"Update rhyme score: {word_pair}: {row[0] if row else None}")
