@@ -61,6 +61,7 @@ function bind_events() {
     search_accent_button.addEventListener("click", post_rhymes_with_manual_accent);
     save_filters_button.addEventListener("click", update_filters);
     scroll_up_button.addEventListener("click", scroll_up);
+    rhymes_list.addEventListener("click", handle_rhyme_like_click);
 }
 
 
@@ -103,6 +104,112 @@ function word_data_to_html(word_data, classes_normal="info-text", classes_accent
 
     text = `<p class="${classes_normal}">${text}</p>`;
     return text;
+}
+
+
+function rhyme_word_length_class(word){
+    const word_length = String(word == null ? "" : word).length;
+    if (word_length > 17)
+        return "is-extra-long";
+    if (word_length > 12)
+        return "is-long";
+    return "";
+}
+
+
+function rhyme_data_to_html(rhyme_data, word_variant_index, rhyme_index){
+    const word = rhyme_data.word;
+    const word_class = rhyme_word_length_class(word);
+    let meta = "";
+
+    if (rhyme_data.is_initial !== undefined){
+        if (!rhyme_data.is_initial)
+            meta += `${fa_long_arrow_left} ${word_with_accent(rhyme_data.initial_word, rhyme_data.initial_accent)}`;
+        meta += ` (${escape_html(rhyme_data.part_of_speech)})`;
+    }
+
+    return `
+        <li class="rhyme-item">
+            <button class="rhyme-like" type="button" aria-label="Падабаецца" aria-pressed="false" data-word-variant-index="${word_variant_index}" data-rhyme-index="${rhyme_index}">
+                <i class="fa fa-heart-o" aria-hidden="true"></i>
+            </button>
+            <div class="rhyme-text">
+                <p class="rhyme-main ${word_class}">${word_with_accent(word, rhyme_data.accent)}</p>
+                ${meta ? `<p class="rhyme-meta">${meta}</p>` : ""}
+            </div>
+        </li>`;
+}
+
+
+function get_like_payload(word_variant_index, rhyme_index){
+    if (!rhymes_response.rhymes_list)
+        return null;
+
+    const rhyme_group = rhymes_response.rhymes_list[word_variant_index];
+    if (!rhyme_group)
+        return null;
+
+    const request_word = rhyme_group.word_variant;
+    const rhyme_word = rhyme_group.rhymes_data[rhyme_index];
+
+    if (!request_word || !rhyme_word)
+        return null;
+
+    return {
+        request: {
+            word: request_word.word,
+            stress: request_word.accent,
+        },
+        rhyme: {
+            word: rhyme_word.word,
+            stress: rhyme_word.accent,
+        },
+    };
+}
+
+
+function set_rhyme_like_state(button, is_liked){
+    const icon = button.querySelector("i");
+    button.classList.toggle("is-liked", is_liked);
+    button.setAttribute("aria-pressed", String(is_liked));
+
+    if (icon){
+        icon.classList.toggle("fa-heart", is_liked);
+        icon.classList.toggle("fa-heart-o", !is_liked);
+    }
+}
+
+
+function handle_rhyme_like_click(event){
+    const button = event.target.closest(".rhyme-like");
+    if (!button || !rhymes_list.contains(button))
+        return;
+
+    const word_variant_index = Number(button.dataset.wordVariantIndex);
+    const rhyme_index = Number(button.dataset.rhymeIndex);
+    const payload = get_like_payload(word_variant_index, rhyme_index);
+
+    if (!payload)
+        return;
+
+    const is_liked = button.classList.contains("is-liked");
+    const endpoint = is_liked ? "/rhyme/dislike" : "/rhyme/like";
+
+    button.disabled = true;
+    $.ajax({
+        url: endpoint,
+        method: "post",
+        dataType: "json",
+        contentType: "application/json",
+        data: JSON.stringify(payload),
+        success: () => set_rhyme_like_state(button, !is_liked),
+        error: () => {
+            search_status_info.innerHTML = `<div class="alert alert-danger info-text" role="alert">Не атрымалася захаваць адзнаку рыфмы.</div>`;
+        },
+        complete: () => {
+            button.disabled = false;
+        },
+    });
 }
 
 
@@ -158,9 +265,8 @@ function process_rhymes_response(data){
             precalc_rhymes_count[i] = rhymes_count_text.innerHTML;
         }
 
-        for (let j in rhymes_data){
-            precalc_rhymes_html[i] += `<li>${word_data_to_html(rhymes_data[j], "rhyme-word")}</li>`;
-        }
+        for (let j in rhymes_data)
+            precalc_rhymes_html[i] += rhyme_data_to_html(rhymes_data[j], i, j);
     }
 
     dropdown_choose_word_menu.querySelectorAll("[data-rhyme-index]").forEach((button) => {
