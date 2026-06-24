@@ -5,6 +5,7 @@ import bel_lang_engine.sounds as sounds
 import hashlib
 from pprint import pprint
 import bel_lang_engine.lang_logs as lang_logs
+from config import SLOUNIK_DB_PATH
 
 ryfmach_logger = lang_logs.new_debug_logger("ryfmach")
 
@@ -534,7 +535,7 @@ def rhymes_text_list(input_word_request):
     return rhymes
 
 
-con = sqlite3.connect('db/Slounik5.db', check_same_thread=False) # db/Slounik4.db
+con = sqlite3.connect(SLOUNIK_DB_PATH, check_same_thread=False)
 cur = con.cursor()
 
 db_lock = threading.Lock()

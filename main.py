@@ -11,6 +11,8 @@ import logging
 import os
 import time
 
+from config import APP_PORT
+
 app = Flask(__name__, template_folder='static/templates')
 app.config['SECRET_KEY'] = 'garikgoyda_secret_key'
 
@@ -189,4 +191,4 @@ def sitemap():
 
 
 if __name__ == '__main__':
-    app.run(port=20004, host='127.0.0.1')
+    app.run(port=APP_PORT, host='127.0.0.1')

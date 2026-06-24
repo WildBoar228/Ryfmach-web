@@ -1,16 +1,15 @@
-import os
 import sqlite3
 import threading
 
+from config import RHYME_LIKES_DB_PATH
 
-LIKES_DB_PATH = "db/RhymeLikes.db"
 
 likes_db_lock = threading.Lock()
 
 
 def init_db():
-    os.makedirs(os.path.dirname(LIKES_DB_PATH), exist_ok=True)
-    with sqlite3.connect(LIKES_DB_PATH) as con:
+    RHYME_LIKES_DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with sqlite3.connect(RHYME_LIKES_DB_PATH) as con:
         con.execute("""
             CREATE TABLE IF NOT EXISTS rhyme_likes (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -28,7 +27,7 @@ def init_db():
 def update_score(request_word: str, request_stress: int, rhyme_word: str, rhyme_stress: int, delta: int):
     init_db()
     with likes_db_lock:
-        with sqlite3.connect(LIKES_DB_PATH) as con:
+        with sqlite3.connect(RHYME_LIKES_DB_PATH) as con:
             word_pair = [(request_word, request_stress), (rhyme_word, rhyme_stress)]
             word_pair.sort()
             (request_word, request_stress), (rhyme_word, rhyme_stress) = word_pair

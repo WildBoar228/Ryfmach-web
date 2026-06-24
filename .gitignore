@@ -9,6 +9,7 @@ data/
 tests.py
 __pycache__/
 .venv/
+.env
 .codex/
 .agents/
 logs/
