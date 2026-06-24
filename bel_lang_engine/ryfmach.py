@@ -6,14 +6,28 @@ import hashlib
 from pprint import pprint
 import bel_lang_engine.lang_logs as lang_logs
 from config import SLOUNIK_DB_PATH
+import time
+import uuid
 
 ryfmach_logger = lang_logs.new_debug_logger("ryfmach")
+performance_logger = lang_logs.new_debug_logger("rhyme_performance")
 
 
 MAX_RHYMES_IN_RESP = 2000
 MAX_RHYME_MISTAKE = 3
 MIN_RHYMES_ADAPTIVE = 50
 MAX_ACCEPTABLE_PENALTY = 13 * 10000
+
+
+def log_performance(search_id: str, stage: str, started_at: float, **metrics):
+    metric_text = " ".join(f"{key}={value}" for key, value in metrics.items())
+    performance_logger.info(
+        "rhyme_search search_id=%s stage=%s duration_ms=%.3f%s",
+        search_id,
+        stage,
+        (time.perf_counter() - started_at) * 1000,
+        f" {metric_text}" if metric_text else "",
+    )
 
 class DB_WordsColumns:
     ID = 0
@@ -340,17 +354,39 @@ def find_rhymes(input_word: str,
                 mistake: int = 0,
                 debug_output=True,
                 cnt_limit=300,
-                words_sort_key=alphabet_sort_words_key):
-    
+                words_sort_key=alphabet_sort_words_key,
+                search_id: str | None = None,
+                search_depth: int = 0):
+    search_id = search_id or uuid.uuid4().hex[:12]
+    search_started_at = time.perf_counter()
+
+    stage_started_at = time.perf_counter()
     working_parts = [get_working_part(input_word, input_accent, i)
                      for i in range(0, max(0, mistake) + 1)]
     # ryfmach_logger.debug(working_parts)
     
     sound_hashes = [get_sound_hash(input_word, input_accent, i)
                     for i in range(0, max(0, mistake) + 1)]
+    log_performance(
+        search_id,
+        "prepare_hashes",
+        stage_started_at,
+        depth=search_depth,
+        mistake=mistake,
+        hash_count=len(sound_hashes),
+    )
 
+    words = []
+    lock_wait_started_at = time.perf_counter()
     try:
         db_lock.acquire(True)
+        log_performance(
+            search_id,
+            "db_lock_wait",
+            lock_wait_started_at,
+            depth=search_depth,
+            mistake=mistake,
+        )
 
         enabled_posp_cnt = sum(filtered_posp)
         posp_filter = " AND ("
@@ -376,7 +412,8 @@ def find_rhymes(input_word: str,
         for i in range(mistake):
             sound_hash_filter += f"sound_hash{i} != ? AND "
         sound_hash_filter += f"sound_hash{max(0, mistake)} == ?"
-        
+
+        stage_started_at = time.perf_counter()
         words = cur.execute(f'''SELECT * FROM words
                                 WHERE {sound_hash_filter} AND word != ?
                                 {posp_filter}
@@ -385,32 +422,74 @@ def find_rhymes(input_word: str,
                                 LIMIT ?;''',
                                 (*sound_hashes, input_word, MAX_RHYMES_IN_RESP)
         ).fetchall()
+        log_performance(
+            search_id,
+            "db_candidate_search",
+            stage_started_at,
+            depth=search_depth,
+            mistake=mistake,
+            candidates=len(words),
+            only_initial=only_initial,
+            enabled_posp=enabled_posp_cnt,
+        )
 
     except Exception as exc:
         ryfmach_logger.debug("ERROR query: ", exc)
     finally:
         db_lock.release()
 
+    candidates_before_filter = len(words)
+    stage_started_at = time.perf_counter()
     words = list(filter(lambda r:
                         get_working_part(r[1], r[4], mistake) ==
                             working_parts[-1],
                         words))
+    log_performance(
+        search_id,
+        "phonetic_filter",
+        stage_started_at,
+        depth=search_depth,
+        mistake=mistake,
+        candidates_in=candidates_before_filter,
+        candidates_out=len(words),
+    )
 
+    stage_started_at = time.perf_counter()
     words = sorted(words, key=record_sort_key(words_sort_key))
+    log_performance(
+        search_id,
+        "candidate_sort",
+        stage_started_at,
+        depth=search_depth,
+        mistake=mistake,
+        candidates=len(words),
+    )
     # ryfmach_logger.debug(f'{len(words)} words (at first), last: {words[-1] if len(words) > 0 else '-'}')
 
     # with open("output.txt", "w", encoding="utf-8") as file:
     #     file.write(str(words))
 
+    stage_started_at = time.perf_counter()
     rhymes = []
     for i in range(len(words)):
         word_dict = get_word_dict(words[i])
         if word_dict.get("initial_word") != input_word:
             rhymes.append(word_dict)
+    log_performance(
+        search_id,
+        "candidate_hydration",
+        stage_started_at,
+        depth=search_depth,
+        mistake=mistake,
+        candidates=len(words),
+        rhymes=len(rhymes),
+    )
     
     if len(rhymes) > cnt_limit:
         rhymes = rhymes[:cnt_limit]
     
+    stage_started_at = time.perf_counter()
+    rhymes_before_deduplication = len(rhymes)
     used_initial = set()
     k = 0
     for i in range(len(rhymes)):
@@ -424,19 +503,33 @@ def find_rhymes(input_word: str,
             rhymes[k] = rhymes[i]
             k += 1
     rhymes = rhymes[:k]
+    log_performance(
+        search_id,
+        "deduplicate",
+        stage_started_at,
+        depth=search_depth,
+        mistake=mistake,
+        rhymes_in=rhymes_before_deduplication,
+        rhymes_out=len(rhymes),
+    )
     
     output_str = f'{mistake}  {input_word} ({input_accent}):  '
     if mistake == -1:
+        adaptive_started_at = time.perf_counter()
+        adaptive_searches = 0
         if len(rhymes) < MIN_RHYMES_ADAPTIVE:
             output_str += f'{len(rhymes)}  '
 
             for mst in range(1, MAX_RHYME_MISTAKE + 1):
                 if len(rhymes) < MIN_RHYMES_ADAPTIVE:
+                    adaptive_searches += 1
                     old_size = len(rhymes)
                     rhymes1 = find_rhymes(input_word, input_accent, filtered_posp,
                                           only_initial, mst, cnt_limit=cnt_limit // 2,
                                           words_sort_key=words_sort_key,
-                                          debug_output=debug_output)
+                                          debug_output=debug_output,
+                                          search_id=search_id,
+                                          search_depth=search_depth + 1)
                     
                     rhymes += rhymes1
     
@@ -456,8 +549,27 @@ def find_rhymes(input_word: str,
                     output_str += f'+{len(rhymes1)}  '
 
             output_str += '=  '
-            
+
+            stage_started_at = time.perf_counter()
             rhymes = sorted(rhymes, key=json_sort_key(words_sort_key))
+            log_performance(
+                search_id,
+                "adaptive_final_sort",
+                stage_started_at,
+                depth=search_depth,
+                mistake=mistake,
+                rhymes=len(rhymes),
+            )
+
+        log_performance(
+            search_id,
+            "adaptive_search",
+            adaptive_started_at,
+            depth=search_depth,
+            mistake=mistake,
+            searches=adaptive_searches,
+            rhymes=len(rhymes),
+        )
 
         # check_rhyme = MIN_RHYMES_ADAPTIVE
         # step = (len(rhymes) - check_rhyme + 1) // 2
@@ -477,7 +589,16 @@ def find_rhymes(input_word: str,
     output_str += f'{len(rhymes)} rhymes found'
     if debug_output:
         ryfmach_logger.debug(output_str)
-    
+
+    log_performance(
+        search_id,
+        "find_rhymes_total",
+        search_started_at,
+        depth=search_depth,
+        mistake=mistake,
+        rhymes=len(rhymes),
+        sort_mode="quality" if words_sort_key is not alphabet_sort_words_key else "alphabet",
+    )
     return rhymes
 
 
@@ -499,16 +620,50 @@ def print_best_rhymes(input_word, rhyme_list, k=5):
     ryfmach_logger.debug(output)
 
 
-def rhymes_text_list(input_word_request):
+def rhymes_text_list(input_word_request, search_id: str | None = None):
+    search_id = search_id or uuid.uuid4().hex[:12]
+    search_started_at = time.perf_counter()
+
+    stage_started_at = time.perf_counter()
     input_word_request["word"] = clean_input_word(input_word_request["word"])
 
     if not is_belarusian(input_word_request["word"]) or len(input_word_request["word"]) > 40:
+        log_performance(
+            search_id,
+            "request_validation",
+            stage_started_at,
+            valid=False,
+            word_length=len(input_word_request["word"]),
+        )
+        log_performance(
+            search_id,
+            "request_total",
+            search_started_at,
+            variants=0,
+            rhymes=0,
+        )
         return []
+    log_performance(
+        search_id,
+        "request_validation",
+        stage_started_at,
+        valid=True,
+        word_length=len(input_word_request["word"]),
+    )
+
+    stage_started_at = time.perf_counter()
     if input_word_request.get("accent") is None:
         input_word_data = get_word_data_from_db(input_word_request["word"].lower(),
                                                 fix_similar_letters=True)
     else:
         input_word_data = [input_word_request]
+    log_performance(
+        search_id,
+        "input_word_lookup",
+        stage_started_at,
+        variants=len(input_word_data),
+        supplied_accent=input_word_request.get("accent") is not None,
+    )
     
     filtered_posp = input_word_request.get("filtered_posp", [True] * 7)
     only_initial = input_word_request.get("only_initial", False)
@@ -527,11 +682,28 @@ def rhymes_text_list(input_word_request):
                                                   filtered_posp=filtered_posp,
                                                   only_initial=only_initial,
                                                   mistake=mistake,
-                                                  words_sort_key=sort_func)})
-    
+                                                  words_sort_key=sort_func,
+                                                  search_id=search_id)})
+
+    stage_started_at = time.perf_counter()
     for i in range(len(rhymes)):
         print_best_rhymes(rhymes[i]["word_variant"], rhymes[i]["rhymes_data"])
-    
+    log_performance(
+        search_id,
+        "result_preview_logging",
+        stage_started_at,
+        variants=len(rhymes),
+    )
+    log_performance(
+        search_id,
+        "request_total",
+        search_started_at,
+        variants=len(rhymes),
+        rhymes=sum(len(variant["rhymes_data"]) for variant in rhymes),
+        sort_mode=input_word_request.get("sort_mode"),
+        mistake=mistake,
+    )
+
     return rhymes
 
 

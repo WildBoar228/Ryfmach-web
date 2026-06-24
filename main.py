@@ -10,6 +10,7 @@ from logging.handlers import RotatingFileHandler
 import logging
 import os
 import time
+import uuid
 
 from config import APP_PORT
 
@@ -86,15 +87,29 @@ def update_rhymes():
         session['rhyme_input_word_info'] = {'word': ''}
         return jsonify(rhymes_list=[], word_found=False)
 
-    start_time = time.time()
-    app.logger.info("%s Request rhyme: %s", str(request.remote_addr), str(input_word_info))
-    rhymes = ryfmach.rhymes_text_list(input_word_info)
+    request_id = uuid.uuid4().hex[:12]
+    start_time = time.perf_counter()
+    app.logger.info(
+        "rhyme_search request_id=%s event=start remote_addr=%s request=%s",
+        request_id,
+        request.remote_addr,
+        input_word_info,
+    )
+    rhymes = ryfmach.rhymes_text_list(input_word_info, search_id=request_id)
     word_found = True
     if rhymes is None:
         rhymes = []
         word_found = False
 
-    app.logger.info(f"{str(request.remote_addr)} Response time: {int((time.time() - start_time) * 1000)} ms")
+    app.logger.info(
+        "rhyme_search request_id=%s event=complete remote_addr=%s "
+        "duration_ms=%.3f variants=%d word_found=%s",
+        request_id,
+        request.remote_addr,
+        (time.perf_counter() - start_time) * 1000,
+        len(rhymes),
+        word_found,
+    )
 
     session['rhyme_input_word_info'] = input_word_info
     return jsonify(rhymes_list=rhymes, word_found=word_found)
